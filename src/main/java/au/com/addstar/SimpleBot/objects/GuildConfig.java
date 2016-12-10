@@ -15,15 +15,23 @@ public class GuildConfig {
         private String id;
         private String prefix;
         private String welcomeMessage;
+        private String announceChannelID;
 
         public GuildConfig(String id){
                 this.id = id;
                 prefix = "!!";
                 welcomeMessage = "";
+                announceChannelID = "";
                 loadConfig();
         }
 
+        public String getAnnounceChannelID() {
+                return announceChannelID;
+        }
 
+        public void setAnnounceChannelID(String announceChannelID) {
+                this.announceChannelID = announceChannelID;
+        }
 
         public String getWelcomeMessage() {
                 return welcomeMessage;
@@ -42,7 +50,8 @@ public class GuildConfig {
         }
 
         public void loadConfig(){
-                File parent = new File("/guilds");
+                //String path = GuildConfig.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+                File parent = new File("guilds");
                 if(!parent.exists()){
                         parent.mkdir();
                 }
@@ -50,6 +59,7 @@ public class GuildConfig {
                 Properties prop = new Properties();
                 prop.setProperty("welcomeMessage",welcomeMessage);
                 prop.setProperty("prefix",prefix);
+                prop.setProperty("announceChannelID",announceChannelID);
                 try {
                         if (config.exists()) {
                                 InputStream finput = new FileInputStream(config);

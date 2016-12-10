@@ -7,6 +7,7 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.InviteReceivedEvent;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
+import sx.blah.discord.handle.impl.events.UserJoinEvent;
 import sx.blah.discord.handle.impl.obj.Guild;
 import sx.blah.discord.handle.impl.obj.Message;
 import sx.blah.discord.handle.obj.*;
@@ -15,6 +16,7 @@ import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
+import java.time.LocalDateTime;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -41,6 +43,15 @@ public class ManagementListener {
             bot.gConfigs.put(id, config);
         }
     }
+
+    public void onJoinEvent(UserJoinEvent event){
+        IUser u = event.getUser();
+        LocalDateTime time = event.getJoinTime();
+        IGuild g = event.getGuild();
+        GuildConfig config = bot.gConfigs.get(g.getID());
+
+    }
+
 
 
 

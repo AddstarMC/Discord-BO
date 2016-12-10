@@ -1,13 +1,11 @@
 package au.com.addstar.SimpleBot.listeners;
 
 import au.com.addstar.SimpleBot.SimpleBot;
+import au.com.addstar.SimpleBot.objects.GuildConfig;
+import au.com.addstar.SimpleBot.ulilities.Utility;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.DiscordException;
-import sx.blah.discord.util.MessageBuilder;
-import sx.blah.discord.util.MissingPermissionsException;
-import sx.blah.discord.util.RateLimitException;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -26,8 +24,13 @@ public class CommandListener {
 
     @EventSubscriber
     public void commandListener(MessageReceivedEvent event) {
+
         IMessage m = event.getMessage();
         IUser u = m.getAuthor();
+        if (m.getChannel().isPrivate()){
+            Utility.sendPrivateMessage(u,"Commands must be used in a public server channel");
+            return;
+        }
         IGuild g = m.getGuild();
         boolean admin = false;
         List<IRole> roles = u.getRolesForGuild(g);
@@ -38,26 +41,61 @@ public class CommandListener {
             }
         }
         if (!admin) {
+            Utility.sendPrivateMessage(u,"You're note an admin...this has been logged....");
             return;
         }
-        String prefix = bot.gConfigs.get(m.getGuild().getID()).getPrefix();
-        if (m.getContent().startsWith(prefix)) {
+
+        GuildConfig config = bot.gConfigs.get(g.getID());
+        String prefix = config.getPrefix();
+        String message =  m.getContent();
+        if (message.startsWith(prefix)) {
+            message = message.substring(2);
             //this is a command we can respond to
             IChannel channel = m.getChannel();
-            try {
-                MessageBuilder builder = new MessageBuilder(SimpleBot.client).withChannel(u.getOrCreatePMChannel()).withContent("This is a discord command");
-                builder.build();
-            } catch (RateLimitException e) { // RateLimitException thrown. The bot is sending messages too quickly!
-                System.err.print("Sending messages too quickly!");
-                e.printStackTrace();
-            } catch (DiscordException e) { // DiscordException thrown. Many possibilities. Use getErrorMessage() to see what went wrong.
-                System.err.print(e.getErrorMessage()); // Print the error message sent by Discord
-                e.printStackTrace();
-            } catch (MissingPermissionsException e) { // MissingPermissionsException thrown. The bot doesn't have permission to send the message!
-                System.err.print("Missing permissions for channel!");
-                e.printStackTrace();
-            }
+            //Utility.sendPrivateMessage(u, "This is a discord message");
+            String[] mSplit = message.split("\\s+");
+            switch (mSplit[0].toLowerCase()){
+                case "set":
+                    if(mSplit.length > 1) {
+                        switch (mSplit[1].toLowerCase()) {
+                            case "prefix":
+                                String oldPrefix = config.getPrefix();
+                                if(mSplit.length > 2){
+                                    String newPrefix = mSplit[2];
+                                    config.setPrefix(newPrefix);
+                                    config.saveConfig();
+                                    Utility.sendPrivateMessage(u,"Prefix updated Old: " +oldPrefix +"New: " + config.getPrefix());
+                                }else{
+                                    Utility.sendPrivateMessage(u,"Current Prefix is : "+oldPrefix);
+                                }
+                                break;
+                            case "welcomemessage":
+                                String oldMessage = config.getWelcomeMessage();
+                                if(mSplit.length > 2){
+                                    StringBuilder out =  new StringBuilder();
+                                    for (int i = 2; mSplit.length > i; i++) {
+                                        out.append(mSplit[i] + " ");
+                                    }
+                                    String newMessage = out.toString();
+                                    config.setWelcomeMessage(newMessage);
+                                    config.saveConfig();
+                                    Utility.sendPrivateMessage(u,"Prefix updated Old: " +oldMessage +"New: " + config.getWelcomeMessage());
+                                }else{
+                                    Utility.sendPrivateMessage(u,"Current Message is : "+oldMessage);
+                                }
+                                break;
+                            default:
+                                //sendSetHelp()
+                        }
+                    }else{
+                        //sendhelp()
+                    }
 
+                    break;
+                default:
+                    //sendHelp()
+
+            }
 
         }
 
