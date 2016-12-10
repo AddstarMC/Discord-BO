@@ -1,6 +1,7 @@
 package au.com.addstar.SimpleBot.ulilities;
 
 import au.com.addstar.SimpleBot.SimpleBot;
+import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MessageBuilder;
@@ -18,17 +19,32 @@ public class Utility {
             MessageBuilder builder = new MessageBuilder(SimpleBot.client).withChannel(u.getOrCreatePMChannel()).withContent(m);
             builder.build();
         } catch (RateLimitException e) { // RateLimitException thrown. The bot is sending messages too quickly!
-            System.err.print("Sending messages too quickly!");
-            e.printStackTrace();
+            SimpleBot.log.error("Sending messages too quickly!");
         } catch (DiscordException e) { // DiscordException thrown. Many possibilities. Use getErrorMessage() to see what went wrong.
-            System.err.print(e.getErrorMessage()); // Print the error message sent by Discord
-            e.printStackTrace();
+            SimpleBot.log.error(e.getErrorMessage()); // Print the error message sent by Discord
         } catch (MissingPermissionsException e) { // MissingPermissionsException thrown. The bot doesn't have permission to send the message!
-            System.err.print("Missing permissions for channel!");
-            e.printStackTrace();
+            SimpleBot.log.error("Missing permissions for channel!");
+
         }
 
     }
+
+    public static void sendChannelMessage(String announceID, String m){
+        IChannel aChannel = SimpleBot.client.getChannelByID(announceID);
+        MessageBuilder builder = new MessageBuilder(SimpleBot.client).withChannel(aChannel).withContent(m);
+        try {
+            builder.build();
+        } catch (RateLimitException e) { // RateLimitException thrown. The bot is sending messages too quickly!
+            SimpleBot.log.error("Sending messages too quickly!");
+    } catch (DiscordException e) { // DiscordException thrown. Many possibilities. Use getErrorMessage() to see what went wrong.
+        SimpleBot.log.error(e.getErrorMessage()); // Print the error message sent by Discord
+    } catch (MissingPermissionsException e) { // MissingPermissionsException thrown. The bot doesn't have permission to send the message!
+            SimpleBot.log.error("Missing permissions for channel!");
+    }
+    }
+
+
+
 
 
 }

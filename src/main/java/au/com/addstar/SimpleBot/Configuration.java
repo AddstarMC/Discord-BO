@@ -7,9 +7,9 @@ import java.util.Properties;
  * Created for use for the Add5tar MC Minecraft server
  * Created by benjamincharlton on 7/12/2016.
  */
-public class Configuration {
-    public static Properties defaultProps;
-    public static File config = new File("config.properties");
+class Configuration {
+    private static Properties defaultProps;
+    private static final File config = new File("config.properties");
 
     public static Properties loadConfig(){
         InputStream input = Configuration.class.getResourceAsStream("/config.properties");
@@ -31,9 +31,7 @@ public class Configuration {
                 createConfig();
                 prop = defaultProps;
             }
-        }catch (FileNotFoundException e){
-            e.printStackTrace();
-        }catch(IOException e){
+        } catch(IOException e){
             e.printStackTrace();
         }
         return prop;

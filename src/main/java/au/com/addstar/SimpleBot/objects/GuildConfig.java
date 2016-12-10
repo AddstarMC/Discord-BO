@@ -1,7 +1,5 @@
 package au.com.addstar.SimpleBot.objects;
 
-import sx.blah.discord.handle.impl.obj.Message;
-
 import java.io.*;
 import java.util.Properties;
 
@@ -12,17 +10,27 @@ import java.util.Properties;
 
 public class GuildConfig {
 
-        private String id;
+        private final String id;
         private String prefix;
         private String welcomeMessage;
         private String announceChannelID;
+        private String modChannelID;
 
         public GuildConfig(String id){
                 this.id = id;
                 prefix = "!!";
                 welcomeMessage = "";
                 announceChannelID = "";
+                modChannelID = "";
                 loadConfig();
+        }
+
+        public String getModChannelID() {
+                return modChannelID;
+        }
+
+        public void setModChannelID(String modChannelID) {
+                this.modChannelID = modChannelID;
         }
 
         public String getAnnounceChannelID() {
@@ -49,17 +57,13 @@ public class GuildConfig {
                 this.prefix = prefix;
         }
 
-        public void loadConfig(){
-                //String path = GuildConfig.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        private void loadConfig(){
                 File parent = new File("guilds");
                 if(!parent.exists()){
                         parent.mkdir();
                 }
                 File config = new File(parent, id+".properties");
-                Properties prop = new Properties();
-                prop.setProperty("welcomeMessage",welcomeMessage);
-                prop.setProperty("prefix",prefix);
-                prop.setProperty("announceChannelID",announceChannelID);
+                Properties prop = createProperties();
                 try {
                         if (config.exists()) {
                                 InputStream finput = new FileInputStream(config);
@@ -78,13 +82,14 @@ public class GuildConfig {
                 }
                 welcomeMessage = prop.getProperty("welcomeMessage","");
                 prefix = prop.getProperty("prefix","!!");
+                announceChannelID = prop.getProperty("announceChannelID");
+                modChannelID = prop.getProperty("modChannelID");
         }
 
         public void saveConfig(){
-                File config = new File("/guilds/"+id+".properties");
-                Properties prop = new Properties();
-                prop.setProperty("welcomeMessage",welcomeMessage);
-                prop.setProperty("prefix",prefix);
+                File parent = new File("guilds");
+                File config = new File(parent, id+".properties");
+                Properties prop = createProperties();
                 try {
                         if (!config.exists()) {
                                config.createNewFile();
@@ -92,11 +97,39 @@ public class GuildConfig {
                         OutputStream out = new FileOutputStream(config);
                         prop.store(out, "Configurations: Server " + id);
                         out.close();
-                } catch (FileNotFoundException e){
-
-                        }catch (IOException e){
-
+                } catch (IOException e){
+                        e.printStackTrace();
+                }
+                if(!checkSavedConfig(config)){
+                                System.err.print("Config failed to update on disk...");
                 }
         }
+
+        private boolean checkSavedConfig(File config){
+                Properties prop = new Properties();
+                try (InputStream finput = new FileInputStream(config)) {
+                        prop.clear();
+                        prop.load(finput);
+                        finput.close();
+
+                } catch (IOException e) {
+                        e.printStackTrace();
+                        return false;
+                }
+                return (prop.getProperty("welcomeMessage").equals(welcomeMessage)&&
+                        prop.getProperty("prefix").equals(prefix)&&
+                        prop.getProperty("announceChannelID").equals(announceChannelID)&&
+                        prop.getProperty("modChannelID").equals(modChannelID));
+        }
+
+        private Properties createProperties(){
+                Properties prop = new Properties();
+                prop.setProperty("welcomeMessage",welcomeMessage);
+                prop.setProperty("prefix",prefix);
+                prop.setProperty("announceChannelID",announceChannelID);
+                prop.setProperty("modChannelID",modChannelID);
+                return prop;
+        }
+
 
 }

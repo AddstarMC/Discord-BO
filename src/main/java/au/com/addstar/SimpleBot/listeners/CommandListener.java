@@ -6,6 +6,10 @@ import au.com.addstar.SimpleBot.ulilities.Utility;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
+import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.MessageList;
+import sx.blah.discord.util.MissingPermissionsException;
+import sx.blah.discord.util.RateLimitException;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -16,7 +20,7 @@ import java.util.List;
  */
 public class CommandListener {
 
-    private SimpleBot bot;
+    private final SimpleBot bot;
 
     public CommandListener(SimpleBot bot) {
         this.bot = bot;
@@ -27,77 +31,140 @@ public class CommandListener {
 
         IMessage m = event.getMessage();
         IUser u = m.getAuthor();
-        if (m.getChannel().isPrivate()){
-            Utility.sendPrivateMessage(u,"Commands must be used in a public server channel");
-            return;
-        }
         IGuild g = m.getGuild();
-        boolean admin = false;
-        List<IRole> roles = u.getRolesForGuild(g);
-        for (IRole r : roles) {
-            EnumSet<Permissions> perms = r.getPermissions();
-            if (perms.contains(Permissions.ADMINISTRATOR)) {
-                admin = true;
-            }
-        }
-        if (!admin) {
-            Utility.sendPrivateMessage(u,"You're note an admin...this has been logged....");
-            return;
-        }
-
-        GuildConfig config = bot.gConfigs.get(g.getID());
+        GuildConfig config = SimpleBot.gConfigs.get(g.getID());
         String prefix = config.getPrefix();
         String message =  m.getContent();
         if (message.startsWith(prefix)) {
-            message = message.substring(2);
-            //this is a command we can respond to
-            IChannel channel = m.getChannel();
-            //Utility.sendPrivateMessage(u, "This is a discord message");
-            String[] mSplit = message.split("\\s+");
-            switch (mSplit[0].toLowerCase()){
-                case "set":
-                    if(mSplit.length > 1) {
-                        switch (mSplit[1].toLowerCase()) {
-                            case "prefix":
-                                String oldPrefix = config.getPrefix();
-                                if(mSplit.length > 2){
-                                    String newPrefix = mSplit[2];
-                                    config.setPrefix(newPrefix);
-                                    config.saveConfig();
-                                    Utility.sendPrivateMessage(u,"Prefix updated Old: " +oldPrefix +"New: " + config.getPrefix());
-                                }else{
-                                    Utility.sendPrivateMessage(u,"Current Prefix is : "+oldPrefix);
-                                }
-                                break;
-                            case "welcomemessage":
-                                String oldMessage = config.getWelcomeMessage();
-                                if(mSplit.length > 2){
-                                    StringBuilder out =  new StringBuilder();
-                                    for (int i = 2; mSplit.length > i; i++) {
-                                        out.append(mSplit[i] + " ");
+            message = message.substring(prefix.length());
+            if (m.getChannel().isPrivate()) {
+                Utility.sendPrivateMessage(u, "Commands must be used in a public server channel");
+                return;
+            }
+            boolean admin = false;
+            boolean moderator = false;
+            List<IRole> roles = u.getRolesForGuild(g);
+            for (IRole r : roles) {
+                EnumSet<Permissions> perms = r.getPermissions();
+                if (perms.contains(Permissions.ADMINISTRATOR)) {
+                    admin = true;
+                }
+                if (perms.contains(Permissions.KICK)) {
+                    moderator = true;
+                }
+            }
+            if (!admin || !moderator) {
+                Utility.sendPrivateMessage(u, "You're not an admin...this has been logged....");
+                return;
+            }
+            if (admin) {
+                //this is a command we can respond to
+                String[] mSplit = message.split("\\s+");
+                switch (mSplit[0].toLowerCase()) {
+                    case "set":
+                        if (mSplit.length > 1) {
+                            switch (mSplit[1].toLowerCase()) {
+                                case "prefix":
+                                    String oldPrefix = config.getPrefix();
+                                    if (mSplit.length > 2) {
+                                        String newPrefix = mSplit[2];
+                                        config.setPrefix(newPrefix);
+                                        config.saveConfig();
+                                        Utility.sendPrivateMessage(u, "Prefix updated Old: " + oldPrefix + "New: " + config.getPrefix());
+                                    } else {
+                                        Utility.sendPrivateMessage(u, "Current Prefix is : " + oldPrefix);
                                     }
-                                    String newMessage = out.toString();
-                                    config.setWelcomeMessage(newMessage);
-                                    config.saveConfig();
-                                    Utility.sendPrivateMessage(u,"Prefix updated Old: " +oldMessage +"New: " + config.getWelcomeMessage());
-                                }else{
-                                    Utility.sendPrivateMessage(u,"Current Message is : "+oldMessage);
-                                }
-                                break;
-                            default:
-                                //sendSetHelp()
-                        }
-                    }else{
-                        //sendhelp()
-                    }
+                                    break;
+                                case "welcomemessage":
+                                    String oldMessage = config.getWelcomeMessage();
+                                    if (mSplit.length > 2) {
+                                        String newMessage = message.substring(mSplit[0].length() + mSplit[1].length() + 2);
+                                        config.setWelcomeMessage(newMessage);
+                                        config.saveConfig();
+                                        Utility.sendPrivateMessage(u, "Welcome message updated.  Old: " + oldMessage + "New: " + config.getWelcomeMessage());
+                                    } else {
+                                        Utility.sendPrivateMessage(u, "Current Message is : " + oldMessage);
+                                    }
+                                    break;
+                                case "announcechannelid":
 
-                    break;
-                default:
-                    //sendHelp()
+                                    IChannel oldChannel = SimpleBot.client.getChannelByID(config.getAnnounceChannelID());
+
+                                    if (mSplit.length > 2) {
+                                        String newAnnounceID = mSplit[2];
+                                        IChannel newChannel = SimpleBot.client.getChannelByID(newAnnounceID);
+                                        if (newChannel == null) {
+                                            if (oldChannel != null) {
+                                                Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldChannel.getName());
+                                            }
+                                            Utility.sendPrivateMessage(u, newAnnounceID + " could not find a channel with that ID");
+                                            return;
+                                        }
+                                        config.setAnnounceChannelID(newAnnounceID);
+                                        config.saveConfig();
+                                        if (oldChannel == null) {
+                                            Utility.sendPrivateMessage(u, "Channel updated New: " + newChannel.getName());
+                                        } else {
+                                            Utility.sendPrivateMessage(u, "Channel updated Old: " + oldChannel.getName() + "New: " + newChannel.getName());
+                                        }
+
+                                    } else {
+                                        Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldChannel.getName());
+                                    }
+                                    break;
+                                default:
+                                    //sendSetHelp()
+                            }
+                        } else {
+                            //sendhelp()
+                        }
+
+                        break;
+                    default:
+                        //sendHelp()
+
+                }
 
             }
+            if(moderator){
+                //this is a command we can respond to
+                IChannel channel = m.getChannel();
+                String[] mSplit = message.split("\\s+");
+                switch (mSplit[0].toLowerCase()){
+                    case "warn":
+                        if(mSplit.length>1){
+                            String warned = mSplit[1];
+                            List<IUser> users = m.getChannel().getGuild().getUsersByName(warned);
+                            if (users.size()>1){
+                                //more than 1 user by that name
+                            }
+                        }
+                        break;
+                    case "purge":
+                        Integer r = 1;
+                        if(mSplit.length>1){
+                            String num = mSplit[1];
+                            r = Integer.parseInt(num);
+                        }
+                        if (r < 1) r=1;
+                        MessageList list = m.getChannel().getMessages();
 
-        }
+                        try{
+                            list.deleteFromRange(list.size()-r,list.size());
+                        }catch (DiscordException e){
+                            SimpleBot.log.error(e.getErrorMessage()); // Print the error message sent by Discord
+                        }catch (RateLimitException e){
+                            SimpleBot.log.error("Sending messages too quickly!");
+                        }catch (MissingPermissionsException e){
+                            SimpleBot.log.error("Missing permissions for channel!");
+                        }
+                    default:
+                        //send help
+
+                }
+
+            }
+        }//no prefix ignore
 
     }
 }
