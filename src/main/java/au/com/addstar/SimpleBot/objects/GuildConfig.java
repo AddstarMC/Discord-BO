@@ -57,7 +57,7 @@ public class GuildConfig {
                 this.prefix = prefix;
         }
 
-        private void loadConfig(){
+        public void loadConfig(){
                 File parent = new File("guilds");
                 if(!parent.exists()){
                         parent.mkdir();
@@ -82,8 +82,8 @@ public class GuildConfig {
                 }
                 welcomeMessage = prop.getProperty("welcomeMessage","");
                 prefix = prop.getProperty("prefix","!!");
-                announceChannelID = prop.getProperty("announceChannelID");
-                modChannelID = prop.getProperty("modChannelID");
+                announceChannelID = prop.getProperty("announceChannelID","");
+                modChannelID = prop.getProperty("modChannelID","");
         }
 
         public void saveConfig(){

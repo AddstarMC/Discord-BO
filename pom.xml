@@ -6,6 +6,33 @@
     <groupId>au.com.addstarmc.discordbot</groupId>
     <artifactId>DiscordBot</artifactId>
     <version>0.1-SNAPSHOT</version>
+    <developers>
+        <developer>
+            <id>Narimm</id>
+            <name>Narimm</name>
+            <url>http://github.com/Narimm</url>
+            <email>benjicharlton@gmail.com</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>10</timezone>
+        </developer>
+        <developer>
+            <id>AddstarMC</id>
+            <name>AddstarMC</name>
+            <url>http://github.com/AddstarMC</url>
+            <roles>
+                <role>maintainer</role>
+            </roles>
+            <timezone>10</timezone>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git@github.com:AddstarMC/Discord-Bot.git</connection>
+        <developerConnection>scm:git:git@github.com:AddstarMC/Discord-Bot.git</developerConnection>
+        <url>https://github.com/AddstarMC/Discord-Bot</url>
+        <tag>HEAD</tag>
+    </scm>
     <dependencies>
             <dependency>
             <groupId>com.github.austinv11</groupId>
@@ -53,6 +80,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
+                    <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
                             <mainClass>au.com.addstar.SimpleBot.SimpleBot</mainClass>

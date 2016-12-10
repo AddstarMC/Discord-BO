@@ -13,6 +13,7 @@ import sx.blah.discord.util.RateLimitException;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -118,6 +119,12 @@ public class CommandListener {
                         } else {
                             //sendhelp()
                         }
+
+                        break;
+                    case "reloadguildconfig":
+                        GuildConfig c = SimpleBot.gConfigs.get(m.getGuild().getID());
+                            c.loadConfig();
+                            Utility.sendPrivateMessage(u,"Configurations reloaded");
 
                         break;
                     default:
