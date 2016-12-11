@@ -15,6 +15,7 @@ public class GuildConfig {
         private String welcomeMessage;
         private String announceChannelID;
         private String modChannelID;
+        private Boolean reportStatusChange;
 
         public GuildConfig(String id){
                 this.id = id;
@@ -22,7 +23,17 @@ public class GuildConfig {
                 welcomeMessage = "";
                 announceChannelID = "";
                 modChannelID = "";
+                reportStatusChange = false;
                 loadConfig();
+        }
+
+
+        public boolean isReportStatusChange() {
+                return reportStatusChange;
+        }
+
+        public void setReportStatusChange(boolean reportStatusChange) {
+                this.reportStatusChange = reportStatusChange;
         }
 
         public String getModChannelID() {
@@ -84,6 +95,7 @@ public class GuildConfig {
                 prefix = prop.getProperty("prefix","!!");
                 announceChannelID = prop.getProperty("announceChannelID","");
                 modChannelID = prop.getProperty("modChannelID","");
+                reportStatusChange = Boolean.getBoolean(prop.getProperty("reportStatusChange", Boolean.toString(false)));
         }
 
         public void saveConfig(){
@@ -128,6 +140,7 @@ public class GuildConfig {
                 prop.setProperty("prefix",prefix);
                 prop.setProperty("announceChannelID",announceChannelID);
                 prop.setProperty("modChannelID",modChannelID);
+                prop.setProperty("reportStatusChange",reportStatusChange.toString());
                 return prop;
         }
 

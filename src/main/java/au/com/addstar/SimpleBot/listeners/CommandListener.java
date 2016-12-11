@@ -11,6 +11,7 @@ import sx.blah.discord.util.MessageList;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
+import java.util.Base64;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +112,44 @@ public class CommandListener {
 
                                     } else {
                                         Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldChannel.getName());
+                                    }
+                                    break;
+                                case "modchannelid":
+
+                                    IChannel oldMChannel = SimpleBot.client.getChannelByID(config.getAnnounceChannelID());
+
+                                    if (mSplit.length > 2) {
+                                        String newAnnounceID = mSplit[2];
+                                        IChannel newChannel = SimpleBot.client.getChannelByID(newAnnounceID);
+                                        if (newChannel == null) {
+                                            if (oldMChannel != null) {
+                                                Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldMChannel.getName());
+                                            }
+                                            Utility.sendPrivateMessage(u, newAnnounceID + " could not find a channel with that ID");
+                                            return;
+                                        }
+                                        config.setAnnounceChannelID(newAnnounceID);
+                                        config.saveConfig();
+                                        if (oldMChannel == null) {
+                                            Utility.sendPrivateMessage(u, "Channel updated New: " + newChannel.getName());
+                                        } else {
+                                            Utility.sendPrivateMessage(u, "Channel updated Old: " + oldMChannel.getName() + "New: " + newChannel.getName());
+                                        }
+
+                                    } else {
+                                        Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldMChannel.getName());
+                                    }
+                                    break;
+                                case "reportStatus":
+                                    Boolean report = config.isReportStatusChange();
+                                    if (mSplit.length > 2) {
+                                        String newReport = mSplit[2];
+                                            Boolean nR = Boolean.getBoolean(newReport);
+                                        config.setReportStatusChange(nR);
+                                        config.saveConfig();
+                                        Utility.sendPrivateMessage(u, "ReportingStatus updated Old: " + report + "New: " + nR);
+                                    } else {
+                                        Utility.sendPrivateMessage(u, "Current ReportingStatus is : " + report);
                                     }
                                     break;
                                 default:

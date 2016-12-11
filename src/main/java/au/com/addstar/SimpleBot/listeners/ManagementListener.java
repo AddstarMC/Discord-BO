@@ -44,6 +44,7 @@ public class ManagementListener {
         IGuild g = event.getGuild();
         GuildConfig config = SimpleBot.gConfigs.get(g.getID());
         Utility.sendPrivateMessage(u, config.getWelcomeMessage());
+        Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has joined " + g.getName());
     }
 
     @EventSubscriber
@@ -75,12 +76,13 @@ public class ManagementListener {
                 message = " has started streaming";
         }
         for(IGuild g : userGuilds){
-
-            String announceID = SimpleBot.gConfigs.get(g.getID()).getAnnounceChannelID();
-            if(announceID != null && announceID.length()>0) {
-                Utility.sendChannelMessage(announceID, u.getDisplayName(g) + message);
+            GuildConfig config = SimpleBot.gConfigs.get(g.getID());
+            String channelID =config.getModChannelID();
+            Boolean report = config.isReportStatusChange();
+            if(channelID != null && channelID.length()>0 && report) {
+                Utility.sendChannelMessage(channelID, u.getDisplayName(g) + message);
             }else{
-                SimpleBot.log.info(SimpleBot.client.getGuildByID(g.getID()).getName() + " has no annouce channel configured.");
+                SimpleBot.log.info(g.getName() + ": " + u.getDisplayName(g) + message);
             }
         }
     }
