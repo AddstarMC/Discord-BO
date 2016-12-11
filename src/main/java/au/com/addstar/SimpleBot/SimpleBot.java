@@ -1,9 +1,10 @@
 package au.com.addstar.SimpleBot;
 
+import au.com.addstar.SimpleBot.http.InviteHandler;
 import au.com.addstar.SimpleBot.listeners.CommandListener;
 import au.com.addstar.SimpleBot.listeners.ManagementListener;
 import au.com.addstar.SimpleBot.objects.GuildConfig;
-
+import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sx.blah.discord.Discord4J;
@@ -11,6 +12,8 @@ import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.util.DiscordException;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -24,8 +27,8 @@ public class SimpleBot {
     public static IDiscordClient client;
     private static Properties config;
     public static HashMap<String,GuildConfig> gConfigs;
+    public static HttpServer server;
     public static final Logger log = LoggerFactory.getLogger(Discord4J.class);
-
 
     public SimpleBot(IDiscordClient client) {
         SimpleBot.client = client;
@@ -36,6 +39,11 @@ public class SimpleBot {
         config = Configuration.loadConfig();
         instance = login(config.getProperty("discordToken"));
         configureListeners();
+        server = createHttpServer();
+        addContexts();
+        server.setExecutor(null);
+        server.start();
+
     }
 
     private static SimpleBot login(String token) {
@@ -61,8 +69,17 @@ public class SimpleBot {
         log.info("Listeners are configured.");
     }
 
-    public Logger getLog(){
-        return log;
+    public static HttpServer createHttpServer(){
+        HttpServer server =null;
+        try {
+            server = HttpServer.create(new InetSocketAddress(Integer.parseInt(config.getProperty("httpPort","22000"))), 0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return server;
     }
 
+    private static void addContexts(){
+        server.createContext("/invite/", new InviteHandler());
+    }
 }

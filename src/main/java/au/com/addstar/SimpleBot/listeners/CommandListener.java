@@ -11,10 +11,8 @@ import sx.blah.discord.util.MessageList;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
-import java.util.Base64;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created for use for the Add5tar MC Minecraft server

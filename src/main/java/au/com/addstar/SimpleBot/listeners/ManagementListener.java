@@ -5,11 +5,13 @@ import au.com.addstar.SimpleBot.objects.GuildConfig;
 import au.com.addstar.SimpleBot.ulilities.Utility;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.*;
+import sx.blah.discord.handle.impl.events.PresenceUpdateEvent;
+import sx.blah.discord.handle.impl.events.ReadyEvent;
+import sx.blah.discord.handle.impl.events.UserJoinEvent;
+import sx.blah.discord.handle.obj.IGuild;
+import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.handle.obj.Presences;
 
-import sx.blah.discord.handle.obj.*;
-
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +42,6 @@ public class ManagementListener {
     @EventSubscriber
     public void onJoinEvent(UserJoinEvent event){
         IUser u = event.getUser();
-        LocalDateTime time = event.getJoinTime();
         IGuild g = event.getGuild();
         GuildConfig config = SimpleBot.gConfigs.get(g.getID());
         Utility.sendPrivateMessage(u, config.getWelcomeMessage());

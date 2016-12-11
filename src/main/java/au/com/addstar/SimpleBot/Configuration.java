@@ -63,9 +63,7 @@ class Configuration {
                 prop = defaultProps;
                 out.close();
             }
-        }catch (FileNotFoundException e){
-            e.printStackTrace();
-        }catch(IOException e){
+        } catch(IOException e){
             e.printStackTrace();
         }
         return prop;

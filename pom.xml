@@ -33,6 +33,11 @@
         <url>https://github.com/AddstarMC/Discord-Bot</url>
         <tag>HEAD</tag>
     </scm>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <discordToken/>
+        <build.number/>
+    </properties>
     <dependencies>
             <dependency>
             <groupId>com.github.austinv11</groupId>
@@ -42,7 +47,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.1.7</version>
+            <version>1.1.8</version>
         </dependency>
     </dependencies>
     <repositories>
@@ -59,10 +64,8 @@
             <url>http://repo2.maven.org/maven2</url>
         </repository>
     </repositories>
-    <properties>
-        <discordToken/>
-    </properties>
     <build>
+        <finalName>${artifactId}-${project.version}-${build.number}</finalName>
         <sourceDirectory>src/main/java</sourceDirectory>
         <defaultGoal>clean install</defaultGoal>
         <resources>
@@ -101,10 +104,16 @@
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
                 <configuration>
                     <target>1.8</target>
                     <source>1.8</source>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.3</version>
             </plugin>
         </plugins>
     </build>
