@@ -1,7 +1,10 @@
 package au.com.addstar.SimpleBot.objects;
 
+import sx.blah.discord.handle.obj.IInvite;
+
 import java.io.*;
 import java.util.Properties;
+import java.util.WeakHashMap;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -17,6 +20,8 @@ public class GuildConfig {
         private String modChannelID;
         private Boolean reportStatusChange;
 
+        private WeakHashMap<String, Invitation> invites;
+
         public GuildConfig(String id){
                 this.id = id;
                 prefix = "!!";
@@ -25,6 +30,7 @@ public class GuildConfig {
                 modChannelID = "";
                 reportStatusChange = false;
                 loadConfig();
+                invites =  new WeakHashMap<>();
         }
 
 
@@ -143,6 +149,19 @@ public class GuildConfig {
                 prop.setProperty("reportStatusChange",reportStatusChange.toString());
                 return prop;
         }
+
+        public Invitation storeInvite(Invitation key, IInvite i){
+                return invites.put(i.getInviteCode(),key);
+        }
+
+        public Invitation getInvitation(IInvite i){
+                return invites.get(i.getInviteCode());
+        }
+
+        public Invitation getInvitation(String code){
+                return invites.get(code);
+        }
+
 
 
 }

@@ -1,12 +1,14 @@
 package au.com.addstar.SimpleBot.ulilities;
 
 import au.com.addstar.SimpleBot.SimpleBot;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MessageBuilder;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Created for the Ark: Survival Evolved.
@@ -42,6 +44,59 @@ public class Utility {
             SimpleBot.log.error("Missing permissions for channel!");
     }
     }
+
+    public static void deleteMessage(IMessage m){
+        try {
+            m.delete();
+        } catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void setUserNick(IGuild g, IUser u, String nick){
+        try {
+            g.setUserNickname(u,nick);
+        } catch (MissingPermissionsException e) {
+            SimpleBot.log.error(" We dont have permission to set the nick of " + u.getDisplayName(g));
+            e.printStackTrace();
+        } catch (DiscordException | RateLimitException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void setRoleforUser(IGuild g, IUser u, IRole r){
+       List<IRole> roles = u.getRolesForGuild(g);
+       roles.add(r);
+       IRole[] role = (IRole[])roles.toArray();
+        try {
+            g.editUserRoles(u,role);
+        } catch (MissingPermissionsException e) {
+            SimpleBot.log.error(" We dont have permission to set the role of " + u.getDisplayName(g) + " to " + roles.toString());
+            e.printStackTrace();
+        } catch (RateLimitException e) {
+            e.printStackTrace();
+        } catch (DiscordException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static UUID StringtoUUID(String uuidstring){
+        if (uuidstring.length() < 32) {
+            throw new IllegalArgumentException("This is not a UUID");
+        }
+        if (!uuidstring.contains("-")) {
+            return UUID.fromString(String.format("%s-%s-%s-%s-%s", uuidstring.substring(0, 8), uuidstring.substring(8, 12), uuidstring.substring(12, 16), uuidstring.substring(16, 20), uuidstring.substring(20)));
+        } else {
+            return UUID.fromString(uuidstring);
+        }
+    }
+
+
+
+
+
+
 
 
 

@@ -1,6 +1,9 @@
 package au.com.addstar.SimpleBot.http;
 
 import au.com.addstar.SimpleBot.SimpleBot;
+import au.com.addstar.SimpleBot.objects.GuildConfig;
+import au.com.addstar.SimpleBot.objects.Invitation;
+import au.com.addstar.SimpleBot.ulilities.Utility;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import sx.blah.discord.handle.obj.IChannel;
@@ -13,6 +16,7 @@ import sx.blah.discord.util.RateLimitException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -25,14 +29,15 @@ public class InviteHandler implements HttpHandler {
     }
     @Override
     public void handle(HttpExchange t) throws IOException {
-        SimpleBot.log.info("InviteRequest received from "  + t.getRemoteAddress());
+        SimpleBot.log.debug("InviteRequest received from "  + t.getRemoteAddress());
         int responseCode = 200;
         String response = null;
         String requestPath = t.getRequestURI().getPath();
         String[] path = requestPath.split("/");
         String guildName = path[2];
         String channelName = path[3];
-        String user = path[4];
+        UUID uuid = Utility.StringtoUUID(path[4]);
+        String user = path[5];
         List<IGuild> guilds = SimpleBot.client.getGuilds();
         String guildID = null;
         for (IGuild guild : guilds){
@@ -47,8 +52,10 @@ public class InviteHandler implements HttpHandler {
                 channel = channels.get(0);
                 IInvite invite = createInvite(channel, 30 * 60, 1, false);
                 if (invite != null) {
+                    Long expiryTime = System.currentTimeMillis() + (30*60*1000);
                     response = invite.getInviteCode();
                     SimpleBot.log.info("Invite Code Generated for " + user + " : " + response);
+                    storeInvitation(uuid,user,expiryTime,invite,guildID);
                 }else{
                     responseCode = 449;
                     response = channel.getName() + " invite generation failed";
@@ -77,5 +84,12 @@ public class InviteHandler implements HttpHandler {
         }
         return invite;
     }
+
+    private Invitation storeInvitation(UUID uuid, String displayName, Long expiryTime, IInvite inv, String guildID){
+        Invitation i =  new Invitation(uuid, displayName, expiryTime);
+        GuildConfig config = SimpleBot.gConfigs.get(guildID);
+        return config.storeInvite(i,inv);
+    }
+
 
 }

@@ -2,6 +2,7 @@ package au.com.addstar.SimpleBot.listeners;
 
 import au.com.addstar.SimpleBot.SimpleBot;
 import au.com.addstar.SimpleBot.objects.GuildConfig;
+import au.com.addstar.SimpleBot.objects.Invitation;
 import au.com.addstar.SimpleBot.ulilities.Utility;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
@@ -207,6 +208,35 @@ public class CommandListener {
 
                 }
 
+            }
+            String[] mSplit = message.split("\\s+");
+            switch (mSplit[0].toLowerCase()) {
+                case "register":
+                    if (!m.getChannel().isPrivate()){
+                        Utility.deleteMessage(m);
+                        Utility.sendPrivateMessage(u,"This command must be sent by private message or DM to " +SimpleBot.client.getOurUser().getDisplayName(g));
+                        break;
+                    }
+                    if(mSplit.length <= 1){
+                       Utility.sendPrivateMessage(u,"You must add the invite code. http://www.discord.gg/<INVITE CODE>.  Only paste code.");
+                       break;
+                    }else{
+                        String code = mSplit[1];
+                        Invitation invite = config.getInvitation(code);
+                        if(invite == null){
+                            Utility.sendPrivateMessage(u, "Invitation Code not found");
+                        }else{
+                            Utility.setUserNick(g,u,invite.getUserName());
+                            SimpleBot.log.info(u.getName() + " has agreed to the rules. Nicknamed: " + invite.getUserName() );
+                            Utility.sendChannelMessage(config.getAnnounceChannelID(),u.getDisplayName(g) + " has agreed to the rules.  Welcome to " +g.getName());
+                            List<IRole> userroles = g.getRolesByName("member");
+                            if(userroles.size() > 1){
+                                SimpleBot.log.warn(" More than 1 role found for \"member\"");
+                            }
+                            Utility.setRoleforUser(g,u,userroles.get(0));
+                        }
+
+                    }
             }
         }//no prefix ignore
 
