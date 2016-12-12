@@ -3,7 +3,9 @@ package au.com.addstar.SimpleBot.objects;
 import sx.blah.discord.handle.obj.IInvite;
 
 import java.io.*;
+import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.WeakHashMap;
 
 /**
@@ -152,6 +154,21 @@ public class GuildConfig {
 
         public Invitation storeInvite(Invitation key, IInvite i){
                 return invites.put(i.getInviteCode(),key);
+        }
+        public void removeInvite(IInvite i ){
+                invites.remove(i.getInviteCode());
+        }
+        public void removeInvite(String code ){
+                invites.remove(code);
+        }
+
+        public String checkForUUIDInvite(UUID uuid) {
+                for (Map.Entry<String,Invitation> e : invites.entrySet()){
+                        if(e.getValue().getUuid() == uuid){
+                                return e.getKey();
+                        }
+                }
+                return null;
         }
 
         public Invitation getInvitation(IInvite i){

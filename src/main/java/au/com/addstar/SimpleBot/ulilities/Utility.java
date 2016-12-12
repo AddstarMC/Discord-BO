@@ -80,6 +80,31 @@ public class Utility {
         }
     }
 
+    public static IInvite checkforInvite(IChannel chan, String code){
+        try {
+            List<IInvite> invites = chan.getInvites();
+            for(IInvite invite : invites){
+                invite.getInviteCode().equals(code);
+                return invite;
+            }
+        } catch (DiscordException | RateLimitException e) {
+            e.printStackTrace();
+        } catch (MissingPermissionsException e) {
+            SimpleBot.log.error(" We dont have permission to get channel invites");
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp){
+        IInvite invite = null;
+        try {
+            invite = chan.createInvite(age, maxUses, temp);
+        } catch (MissingPermissionsException | DiscordException | RateLimitException e) {
+            e.printStackTrace();
+        }
+        return invite;
+    }
+
 
     public static UUID StringtoUUID(String uuidstring){
         if (uuidstring.length() < 32) {

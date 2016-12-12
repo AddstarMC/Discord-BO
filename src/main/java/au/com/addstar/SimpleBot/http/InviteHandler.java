@@ -9,9 +9,6 @@ import com.sun.net.httpserver.HttpHandler;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IInvite;
-import sx.blah.discord.util.DiscordException;
-import sx.blah.discord.util.MissingPermissionsException;
-import sx.blah.discord.util.RateLimitException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -46,19 +43,27 @@ public class InviteHandler implements HttpHandler {
             }
         }
         if(guildID != null) {
+            String pendingInvitation = checkInviteforUser(uuid,guildID);
             List<IChannel> channels = SimpleBot.client.getGuildByID(guildID).getChannelsByName(channelName);
-            IChannel channel = null;
+            IChannel channel;
+            IInvite invite;
             if(channels.size() == 1){
                 channel = channels.get(0);
-                IInvite invite = createInvite(channel, 30 * 60, 1, false);
-                if (invite != null) {
-                    Long expiryTime = System.currentTimeMillis() + (30*60*1000);
-                    response = invite.getInviteCode();
-                    SimpleBot.log.info("Invite Code Generated for " + user + " : " + response);
-                    storeInvitation(uuid,user,expiryTime,invite,guildID);
+                invite = Utility.checkforInvite(channel,pendingInvitation);
+                if(invite == null) {
+                    removeInvitation(pendingInvitation, guildID);
+                    invite = Utility.createInvite(channel, 30 * 60, 1, false);
+                    if (invite != null) {
+                        Long expiryTime = System.currentTimeMillis() + (30 * 60 * 1000);
+                        response = invite.getInviteCode();
+                        SimpleBot.log.info("Invite Code Generated for " + user + " : " + response);
+                        storeInvitation(uuid, user, expiryTime, invite, guildID);
+                    } else {
+                        responseCode = 449;
+                        response = channel.getName() + " invite generation failed";
+                    }
                 }else{
-                    responseCode = 449;
-                    response = channel.getName() + " invite generation failed";
+                    response = invite.getInviteCode();
                 }
             }else{
                 responseCode = 449;
@@ -75,20 +80,22 @@ public class InviteHandler implements HttpHandler {
         os.close();
     }
 
-    private IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp){
-        IInvite invite = null;
-        try {
-            invite = chan.createInvite(age, maxUses, temp);
-        } catch (MissingPermissionsException | DiscordException | RateLimitException e) {
-            e.printStackTrace();
-        }
-        return invite;
-    }
+
 
     private Invitation storeInvitation(UUID uuid, String displayName, Long expiryTime, IInvite inv, String guildID){
         Invitation i =  new Invitation(uuid, displayName, expiryTime);
         GuildConfig config = SimpleBot.gConfigs.get(guildID);
         return config.storeInvite(i,inv);
+    }
+
+    private void removeInvitation(String code, String guildID){
+        GuildConfig config = SimpleBot.gConfigs.get(guildID);
+        config.removeInvite(code);
+    }
+
+    private String checkInviteforUser(UUID uuid,String guildID){
+        GuildConfig config = SimpleBot.gConfigs.get(guildID);
+        return config.checkForUUIDInvite(uuid);
     }
 
 
