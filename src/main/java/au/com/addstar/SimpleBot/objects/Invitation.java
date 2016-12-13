@@ -8,42 +8,46 @@ import java.util.UUID;
  */
 public class Invitation {
 
-    public Invitation(UUID uuid, String displayName, Long expiryTime){
+    private final UUID uuid;
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    private String userName;
+    private final long expiryTime;
+    private final String inviteCode;
+
+    public Invitation(UUID uuid, String displayName, Long expiryTime, String inviteCode) {
         this.uuid = uuid;
         this.userName = displayName;
         this.expiryTime = expiryTime;
-    }
-    public UUID getUuid() {
-        return uuid;
+        this.inviteCode = inviteCode;
     }
 
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
+    public UUID getUuid() {
+        return uuid;
     }
 
     public String getUserName() {
         return userName;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
     public long getExpiryTime() {
         return expiryTime;
     }
 
-    public void setExpiryTime(long expiryTime) {
-        this.expiryTime = expiryTime;
+    public String getInviteCode() {
+        return inviteCode;
     }
 
-    private UUID uuid;
-    private String userName;
-    private long expiryTime;
+    public boolean hasExpired(){
+        return expiryTime <= System.currentTimeMillis();
+    }
 
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof Invitation) {
+        if (obj instanceof Invitation) {
             Invitation test = (Invitation) obj;
             return uuid.equals(test.getUuid());
         }

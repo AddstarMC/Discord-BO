@@ -1,7 +1,5 @@
 package au.com.addstar.SimpleBot.objects;
 
-import sx.blah.discord.handle.obj.IInvite;
-
 import java.io.*;
 import java.util.Map;
 import java.util.Properties;
@@ -152,32 +150,33 @@ public class GuildConfig {
                 return prop;
         }
 
-        public Invitation storeInvite(Invitation key, IInvite i){
-                return invites.put(i.getInviteCode(),key);
+        public Invitation storeInvite(Invitation value){
+                if(!invites.containsKey(value.getInviteCode())){
+                        return invites.put(value.getInviteCode(),value);
+                }
+                return invites.get(value.getInviteCode());
         }
-        public void removeInvite(IInvite i ){
-                invites.remove(i.getInviteCode());
-        }
-        public void removeInvite(String code ){
+        public void removeInvite(String code){
                 invites.remove(code);
         }
 
-        public String checkForUUIDInvite(UUID uuid) {
+        public Invitation checkForUUIDInvite(UUID uuid) {
                 for (Map.Entry<String,Invitation> e : invites.entrySet()){
-                        if(e.getValue().getUuid() == uuid){
-                                return e.getKey();
+                        UUID stored = e.getValue().getUuid();
+                        if(stored.equals(uuid)){
+                                return e.getValue();
                         }
                 }
                 return null;
         }
 
-        public Invitation getInvitation(IInvite i){
-                return invites.get(i.getInviteCode());
-        }
-
         public Invitation getInvitation(String code){
+                Invitation inv = invites.get(code);
+                if (inv.hasExpired())return null;
                 return invites.get(code);
         }
+
+
 
 
 

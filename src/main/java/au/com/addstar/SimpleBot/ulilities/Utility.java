@@ -1,11 +1,9 @@
 package au.com.addstar.SimpleBot.ulilities;
 
 import au.com.addstar.SimpleBot.SimpleBot;
+import au.com.addstar.SimpleBot.objects.Invitation;
 import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.DiscordException;
-import sx.blah.discord.util.MessageBuilder;
-import sx.blah.discord.util.MissingPermissionsException;
-import sx.blah.discord.util.RateLimitException;
+import sx.blah.discord.util.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -44,6 +42,25 @@ public class Utility {
             SimpleBot.log.error("Missing permissions for channel!");
     }
     }
+    public static void deleteMessages(MessageList list,int r){
+        try {
+            int lastindex;
+            if(r>list.size()){
+                lastindex = r;
+            }else{
+                lastindex = r;
+            }
+            int firstindex = 0;
+            list.deleteFromRange(firstindex,lastindex);
+        } catch (RateLimitException | DiscordException e) {
+            e.printStackTrace();
+        } catch (MissingPermissionsException e) {
+            SimpleBot.log.error("Permission Error");
+            e.printStackTrace();
+        }
+
+    }
+
 
     public static void deleteMessage(IMessage m){
         try {
@@ -58,7 +75,6 @@ public class Utility {
             g.setUserNickname(u,nick);
         } catch (MissingPermissionsException e) {
             SimpleBot.log.error(" We dont have permission to set the nick of " + u.getDisplayName(g));
-            e.printStackTrace();
         } catch (DiscordException | RateLimitException e) {
             e.printStackTrace();
         }
@@ -73,19 +89,16 @@ public class Utility {
         } catch (MissingPermissionsException e) {
             SimpleBot.log.error(" We dont have permission to set the role of " + u.getDisplayName(g) + " to " + roles.toString());
             e.printStackTrace();
-        } catch (RateLimitException e) {
-            e.printStackTrace();
-        } catch (DiscordException e) {
+        } catch (RateLimitException | DiscordException e) {
             e.printStackTrace();
         }
     }
 
-    public static IInvite checkforInvite(IChannel chan, String code){
+    public static IInvite checkforInvite(IChannel chan, Invitation botinvite){
         try {
             List<IInvite> invites = chan.getInvites();
             for(IInvite invite : invites){
-                invite.getInviteCode().equals(code);
-                return invite;
+                if(invite.getInviteCode().equals(botinvite.getInviteCode()))return invite;
             }
         } catch (DiscordException | RateLimitException e) {
             e.printStackTrace();
@@ -96,9 +109,14 @@ public class Utility {
         return null;
     }
     public static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp){
+
+        return createInvite(chan, age, maxUses, true,true);
+    }
+
+    public static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp, boolean unique){
         IInvite invite = null;
         try {
-            invite = chan.createInvite(age, maxUses, temp);
+            invite = chan.createInvite(age, maxUses, temp, unique);
         } catch (MissingPermissionsException | DiscordException | RateLimitException e) {
             e.printStackTrace();
         }

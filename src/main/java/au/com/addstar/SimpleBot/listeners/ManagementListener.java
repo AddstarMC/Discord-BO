@@ -21,13 +21,6 @@ import java.util.List;
  */
 public class ManagementListener {
 
-    private final SimpleBot bot;
-
-    public ManagementListener(SimpleBot bot){
-        this.bot = bot;
-    }
-
-
     @EventSubscriber
     public void onReadyEvent(ReadyEvent event){
         IDiscordClient client = event.getClient(); // Gets the client from the event object

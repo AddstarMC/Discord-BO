@@ -42,7 +42,7 @@
             <dependency>
             <groupId>com.github.austinv11</groupId>
             <artifactId>Discord4J</artifactId>
-            <version>2.6.1</version>
+            <version>f6f90c4b9e7ecd853fdb65baf910e49c1e9a935d</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -65,7 +65,7 @@
         </repository>
     </repositories>
     <build>
-        <finalName>${artifactId}-${project.version}-${build.number}</finalName>
+        <finalName>${project.artifactId}-${project.version}-${build.number}</finalName>
         <sourceDirectory>src/main/java</sourceDirectory>
         <defaultGoal>clean install</defaultGoal>
         <resources>

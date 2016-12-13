@@ -13,6 +13,7 @@ import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.util.DiscordException;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Properties;
@@ -62,8 +63,8 @@ public class SimpleBot {
     }
 
     private static void configureListeners() {
-        ManagementListener mListen = new ManagementListener(instance);
-        CommandListener cListen = new CommandListener(instance);
+        ManagementListener mListen = new ManagementListener();
+        CommandListener cListen = new CommandListener();
         client.getDispatcher().registerListener(mListen);
         client.getDispatcher().registerListener(cListen);
         log.info("Listeners are configured.");
@@ -71,8 +72,12 @@ public class SimpleBot {
 
     public static HttpServer createHttpServer(){
         HttpServer server =null;
+        String host = config.getProperty("hostnameIP","localhost");
+        Integer port = Integer.parseInt(config.getProperty("httpPort","22000"));
         try {
-            server = HttpServer.create(new InetSocketAddress(Integer.parseInt(config.getProperty("httpPort","22000"))), 0);
+            InetAddress ip = InetAddress.getByName(host);
+            InetSocketAddress socketAddress = new InetSocketAddress(ip,port);
+            server = HttpServer.create(socketAddress, 0);
         } catch (IOException e) {
             e.printStackTrace();
         }
