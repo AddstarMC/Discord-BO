@@ -81,13 +81,13 @@ public class Utility {
     }
 
     public static void setRoleforUser(IGuild g, IUser u, IRole r){
-       List<IRole> roles = u.getRolesForGuild(g);
-       roles.add(r);
-       IRole[] role = (IRole[])roles.toArray();
+        List<IRole> currroles = g.getRolesForUser(u);
+        currroles.add(r);
+        IRole[] newroles = currroles.toArray(new IRole[0]);
         try {
-            g.editUserRoles(u,role);
+           g.editUserRoles(u,newroles);
         } catch (MissingPermissionsException e) {
-            SimpleBot.log.error(" We dont have permission to set the role of " + u.getDisplayName(g) + " to " + roles.toString());
+            SimpleBot.log.error(" We dont have permission to set the role of " + u.getDisplayName(g) + " to " + newroles.toString());
             e.printStackTrace();
         } catch (RateLimitException | DiscordException e) {
             e.printStackTrace();
