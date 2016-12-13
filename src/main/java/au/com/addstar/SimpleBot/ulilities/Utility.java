@@ -46,10 +46,12 @@ public class Utility {
         try {
             int lastindex;
             if(r>list.size()){
-                lastindex = r;
+                lastindex = list.size();
             }else{
                 lastindex = r;
             }
+            if (lastindex>100)lastindex=100;
+            if (lastindex < 1)lastindex=1;
             int firstindex = 0;
             list.deleteFromRange(firstindex,lastindex);
         } catch (RateLimitException | DiscordException e) {

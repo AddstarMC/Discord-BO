@@ -107,19 +107,19 @@ public class CommandListener {
                                 return;
                             case "modchannelid":
 
-                                IChannel oldMChannel = SimpleBot.client.getChannelByID(config.getAnnounceChannelID());
+                                IChannel oldMChannel = SimpleBot.client.getChannelByID(config.getModChannelID());
 
                                 if (mSplit.length > 2) {
-                                    String newAnnounceID = mSplit[2];
-                                    IChannel newChannel = SimpleBot.client.getChannelByID(newAnnounceID);
+                                    String newModChannelID = mSplit[2];
+                                    IChannel newChannel = SimpleBot.client.getChannelByID(newModChannelID);
                                     if (newChannel == null) {
                                         if (oldMChannel != null) {
-                                            Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldMChannel.getName());
+                                            Utility.sendPrivateMessage(u, "Current Moderation Channel is : " + oldMChannel.getName());
                                         }
-                                        Utility.sendPrivateMessage(u, newAnnounceID + " could not find a channel with that ID");
+                                        Utility.sendPrivateMessage(u, newModChannelID + " could not find a channel with that ID");
                                         return;
                                     }
-                                    config.setAnnounceChannelID(newAnnounceID);
+                                    config.setModChannelID(newModChannelID);
                                     config.saveConfig();
                                     if (oldMChannel == null) {
                                         Utility.sendPrivateMessage(u, "Channel updated New: " + newChannel.getName());
@@ -131,7 +131,7 @@ public class CommandListener {
                                     Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldMChannel.getName());
                                 }
                                 return;
-                            case "reportStatus":
+                            case "reportstatus":
                                 Boolean report = config.isReportStatusChange();
                                 if (mSplit.length > 2) {
                                     String newReport = mSplit[2];
@@ -260,8 +260,7 @@ public class CommandListener {
     private void sendModeraterHelp(IGuild g,IUser u, String prefix){
         String builder = addStyle(Styles.BOLD,
                 SimpleBot.client.getOurUser().getDisplayName(g) +
-                        " Moderator Help Text") +
-                "\n" +
+                        " Moderator Help Text") +"\n" +
                 prefix + "purge <Number - Purge this number of messages" + "\n" +
                 prefix + "warn <@Name> -- not yet implemented" + "\n";
         Utility.sendPrivateMessage(u, builder);

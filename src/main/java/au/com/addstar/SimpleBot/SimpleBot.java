@@ -7,7 +7,6 @@ import au.com.addstar.SimpleBot.objects.GuildConfig;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sx.blah.discord.Discord4J;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.util.DiscordException;
@@ -29,7 +28,8 @@ public class SimpleBot {
     private static Properties config;
     public static HashMap<String,GuildConfig> gConfigs;
     public static HttpServer server;
-    public static final Logger log = LoggerFactory.getLogger(Discord4J.class);
+    public static final Logger log = LoggerFactory.getLogger(SimpleBot.class);
+
 
     public SimpleBot(IDiscordClient client) {
         SimpleBot.client = client;
@@ -44,7 +44,7 @@ public class SimpleBot {
         addContexts();
         server.setExecutor(null);
         server.start();
-
+        log.info("HttpServer started on " + server.getAddress().getHostString() +":"+ server.getAddress().getPort());
     }
 
     private static SimpleBot login(String token) {
