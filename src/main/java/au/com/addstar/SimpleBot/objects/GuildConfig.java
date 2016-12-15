@@ -1,10 +1,15 @@
 package au.com.addstar.SimpleBot.objects;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+
 import java.io.*;
+import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.WeakHashMap;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -20,7 +25,7 @@ public class GuildConfig {
         private String modChannelID;
         private Boolean reportStatusChange;
 
-        private WeakHashMap<String, Invitation> invites;
+        private Map<String, Invitation> inviteCache;
 
         public GuildConfig(String id){
                 this.id = id;
@@ -30,9 +35,12 @@ public class GuildConfig {
                 modChannelID = "";
                 reportStatusChange = false;
                 loadConfig();
-                invites =  new WeakHashMap<>();
+                inviteCache =  new HashMap<>();
         }
 
+        Map<String, Invitation> getInviteCache() {
+                return inviteCache;
+        }
 
         public boolean isReportStatusChange() {
                 return reportStatusChange;
@@ -102,6 +110,7 @@ public class GuildConfig {
                 announceChannelID = prop.getProperty("announceChannelID","");
                 modChannelID = prop.getProperty("modChannelID","");
                 reportStatusChange = Boolean.getBoolean(prop.getProperty("reportStatusChange", Boolean.toString(false)));
+                loadInvites();
         }
 
         public void saveConfig(){
@@ -121,7 +130,66 @@ public class GuildConfig {
                 if(!checkSavedConfig(config)){
                                 System.err.print("Config failed to update on disk...");
                 }
+                saveInvites();
         }
+
+        private void saveInvites(){
+                if (inviteCache.size()==0)return;
+                Gson gsonencoder = new Gson();
+                File parent = new File ("guilds");
+                File sub =  new File(parent,id);
+                if (!sub.exists()){
+                        sub.mkdir();
+                }
+                File inviteFile = new File(sub,"invites.json");
+                try{
+                        if(!inviteFile.exists())inviteFile.createNewFile();
+                        OutputStream out = new FileOutputStream(inviteFile);
+                        Type type = new TypeToken<Map<String,Invitation>>(){}.getType();
+                        String encoded = gsonencoder.toJson(inviteCache,type);
+                        out.write(encoded.getBytes());
+                        out.close();
+                }
+                catch(IOException e){
+                        e.printStackTrace();
+                }
+
+
+        }
+
+        private void loadInvites(){
+                Gson gsondecoder = new Gson();
+                File parent = new File ("guilds");
+                File sub =  new File(parent,id);
+                Map<String,Invitation> loadedInvites = null;
+                if (!sub.exists()){
+                        return;
+                }
+                File inviteFile = new File(sub,"invites.json");
+                if(!inviteFile.exists())return;
+                try {
+                        InputStream in = new FileInputStream(inviteFile);
+                        InputStreamReader inread = new InputStreamReader(in);
+                        JsonReader reader = new JsonReader(inread);
+                        Type type = new TypeToken<Map<String,Invitation>>(){}.getType();
+                        loadedInvites = gsondecoder.fromJson(reader,type);
+                } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                }
+                if(loadedInvites != null && loadedInvites.size()>0){
+                        if (inviteCache == null){
+                                inviteCache = loadedInvites;
+                                return;
+                        }
+                        for(Map.Entry<String,Invitation> e: loadedInvites.entrySet()){
+                                if(!inviteCache.containsKey(e.getKey())){
+                                        inviteCache.put(e.getKey(),e.getValue());
+                                }
+                        }
+                }
+        }
+
+
 
         private boolean checkSavedConfig(File config){
                 Properties prop = new Properties();
@@ -137,7 +205,8 @@ public class GuildConfig {
                 return (prop.getProperty("welcomeMessage").equals(welcomeMessage)&&
                         prop.getProperty("prefix").equals(prefix)&&
                         prop.getProperty("announceChannelID").equals(announceChannelID)&&
-                        prop.getProperty("modChannelID").equals(modChannelID));
+                        prop.getProperty("modChannelID").equals(modChannelID)&&
+                prop.getProperty("reportStatusChange").equals(reportStatusChange.toString()));
         }
 
         private Properties createProperties(){
@@ -151,17 +220,17 @@ public class GuildConfig {
         }
 
         public Invitation storeInvite(Invitation value){
-                if(!invites.containsKey(value.getInviteCode())){
-                        return invites.put(value.getInviteCode(),value);
+                if(!inviteCache.containsKey(value.getInviteCode())){
+                        return inviteCache.put(value.getInviteCode(),value);
                 }
-                return invites.get(value.getInviteCode());
+                return inviteCache.get(value.getInviteCode());
         }
         public void removeInvite(String code){
-                invites.remove(code);
+                inviteCache.remove(code);
         }
 
         public Invitation checkForUUIDInvite(UUID uuid) {
-                for (Map.Entry<String,Invitation> e : invites.entrySet()){
+                for (Map.Entry<String,Invitation> e : inviteCache.entrySet()){
                         UUID stored = e.getValue().getUuid();
                         if(stored.equals(uuid)){
                                 return e.getValue();
@@ -171,10 +240,16 @@ public class GuildConfig {
         }
 
         public Invitation getInvitation(String code){
-                Invitation inv = invites.get(code);
+                Invitation inv = inviteCache.get(code);
                 if (inv.hasExpired())return null;
-                return invites.get(code);
+                return inviteCache.get(code);
         }
+
+        public Invitation getExpiredInvite(String code){
+                Invitation inv = inviteCache.get(code);
+                return (inv.hasExpired())?inv:null;
+        }
+
 
 
 

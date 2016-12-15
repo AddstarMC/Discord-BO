@@ -4,7 +4,6 @@ import au.com.addstar.SimpleBot.SimpleBot;
 import au.com.addstar.SimpleBot.objects.GuildConfig;
 import au.com.addstar.SimpleBot.objects.Invitation;
 import au.com.addstar.SimpleBot.ulilities.Utility;
-import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.http.HttpStatus;
@@ -13,7 +12,6 @@ import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IInvite;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.*;
 
 import static au.com.addstar.SimpleBot.ulilities.Utility.checkforInvite;
@@ -24,8 +22,6 @@ import static au.com.addstar.SimpleBot.ulilities.Utility.createInvite;
  * Created by benjamincharlton on 11/12/2016.
  */
 public class InviteHandler implements HttpHandler {
-
-    private static final Gson Gson = new Gson();
 
     public InviteHandler(){
 
@@ -42,7 +38,7 @@ public class InviteHandler implements HttpHandler {
 
         if(path.length <6) {
             contentHeaderList.add("application/text");
-            doResponse(t,responseCode,contentHeaderList, "Must have 5 parts");
+            Utilities.doResponse(t,responseCode,contentHeaderList, "Must have 5 parts");
             return;
         }
         String guildName = path[2];
@@ -63,7 +59,7 @@ public class InviteHandler implements HttpHandler {
             responseCode = HttpStatus.SC_BAD_REQUEST;
             contentHeaderList.add("application/text");
             response = "Multiple Guilds found matching " + guildName;
-            doResponse(t,responseCode,contentHeaderList,response);
+            Utilities.doResponse(t,responseCode,contentHeaderList,response);
             return;
         }
         if (guild != null) {
@@ -80,7 +76,7 @@ public class InviteHandler implements HttpHandler {
                 responseCode = HttpStatus.SC_OK;
                 responsebuilder.put("url","https://discord.gg/"+ pendingInvitation.getInviteCode());
                 responsebuilder.put("cmd", config.getPrefix() + "register " + pendingInvitation.getInviteCode());
-                doJsonResponse(t,responseCode,responsebuilder);
+                Utilities.doJsonResponse(t,responseCode,responsebuilder);
                 SimpleBot.log.info("Stored Invite returned for " + pendingInvitation.getUserName() + " : " + pendingInvitation.getInviteCode());
             }
             List<IChannel> channels = SimpleBot.client.getGuildByID(guild.getID()).getChannelsByName(channelName);
@@ -99,7 +95,7 @@ public class InviteHandler implements HttpHandler {
                         responseCode = HttpStatus.SC_OK;
                         responsebuilder.put("url","https://discord.gg/"+ invite.getInviteCode());
                         responsebuilder.put("cmd", config.getPrefix() + "register " + invite.getInviteCode());
-                        doJsonResponse(t,responseCode,responsebuilder);
+                        Utilities.doJsonResponse(t,responseCode,responsebuilder);
                         SimpleBot.log.info("Invite Code Generated for " + user + " : " + invite.getInviteCode());
                         storeInvitation(uuid, user, expiryTime, invite.getInviteCode(),config);
                     } else {
@@ -120,22 +116,8 @@ public class InviteHandler implements HttpHandler {
                 contentHeaderList.add("application/text");
                 response = "No Guilds found matching " + guildName;
             }
-            doResponse(t,responseCode,contentHeaderList,response);
+            Utilities.doResponse(t,responseCode,contentHeaderList,response);
         }
-    private void doJsonResponse(HttpExchange t, int responseCode, Map<String,String> map) throws IOException {
-        List<String> contentType = new ArrayList<>();
-        String response = Gson.toJson(map);
-        contentType.add("application/json");
-        doResponse(t,responseCode,contentType,response);
-    }
-
-    private void doResponse(HttpExchange t, int responseCode, List<String> contentType, String response) throws IOException {
-        t.getResponseHeaders().put("Content-Type", contentType);
-        t.sendResponseHeaders(responseCode, response.length());
-        OutputStream os = t.getResponseBody();
-        os.write(response.getBytes());
-        os.close();
-    }
 
     private void storeInvitation(UUID uuid, String displayName, Long expiryTime, String invitecode,GuildConfig config){
         Invitation inv =  new Invitation(uuid, displayName, expiryTime, invitecode);

@@ -3,17 +3,13 @@ package au.com.addstar.SimpleBot.objects;
 import java.util.UUID;
 
 /**
- * Created for the Ark: Survival Evolved.
+ * Created for the AddstarMC network
  * Created by Narimm on 12/12/2016.
  */
-public class Invitation {
+
+public class Invitation{
 
     private final UUID uuid;
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
     private String userName;
     private final long expiryTime;
     private final String inviteCode;
@@ -25,7 +21,7 @@ public class Invitation {
         this.inviteCode = inviteCode;
     }
 
-    public UUID getUuid() {
+    UUID getUuid() {
         return uuid;
     }
 
@@ -33,7 +29,11 @@ public class Invitation {
         return userName;
     }
 
-    public long getExpiryTime() {
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    private long getExpiryTime() {
         return expiryTime;
     }
 
@@ -49,7 +49,10 @@ public class Invitation {
     public boolean equals(Object obj) {
         if (obj instanceof Invitation) {
             Invitation test = (Invitation) obj;
-            return uuid.equals(test.getUuid());
+            return uuid.equals(test.getUuid())
+                    &&userName.equals(test.getUserName())
+                    &&inviteCode.equals(test.getInviteCode())
+                    &&expiryTime == test.getExpiryTime();
         }
         return false;
     }

@@ -1,5 +1,7 @@
 package au.com.addstar.SimpleBot;
 
+import au.com.addstar.SimpleBot.http.AnnouncerHandler;
+import au.com.addstar.SimpleBot.http.DefaultHandler;
 import au.com.addstar.SimpleBot.http.InviteHandler;
 import au.com.addstar.SimpleBot.listeners.CommandListener;
 import au.com.addstar.SimpleBot.listeners.ManagementListener;
@@ -15,6 +17,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -25,9 +28,9 @@ public class SimpleBot {
 
     public static SimpleBot instance;
     public static IDiscordClient client;
-    private static Properties config;
+    public static Properties config;
     public static HashMap<String,GuildConfig> gConfigs;
-    public static HttpServer server;
+    static HttpServer server;
     public static final Logger log = LoggerFactory.getLogger(SimpleBot.class);
 
 
@@ -41,10 +44,17 @@ public class SimpleBot {
         instance = login(config.getProperty("discordToken"));
         configureListeners();
         server = createHttpServer();
-        addContexts();
+        addContexts(server);
         server.setExecutor(null);
         server.start();
         log.info("HttpServer started on " + server.getAddress().getHostString() +":"+ server.getAddress().getPort());
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                close();
+            } catch (DiscordException e) {
+                e.printStackTrace();
+            }
+        }, "Shutdown-thread"));
     }
 
     private static SimpleBot login(String token) {
@@ -70,21 +80,39 @@ public class SimpleBot {
         log.info("Listeners are configured.");
     }
 
-    public static HttpServer createHttpServer(){
+    static HttpServer createHttpServer(){
         HttpServer server =null;
         String host = config.getProperty("hostnameIP","localhost");
         Integer port = Integer.parseInt(config.getProperty("httpPort","22000"));
         try {
             InetAddress ip = InetAddress.getByName(host);
             InetSocketAddress socketAddress = new InetSocketAddress(ip,port);
-            server = HttpServer.create(socketAddress, 0);
+            server = HttpServer.create(socketAddress, 2);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return server;
     }
 
-    private static void addContexts(){
+    private static void addContexts(HttpServer server){
+        server.createContext("/", new DefaultHandler());
         server.createContext("/invite/", new InviteHandler());
+        server.createContext("/announcer/", new AnnouncerHandler());
     }
+    public static void exit(){
+        System.exit(0);
+    }
+
+
+    private static void close() throws DiscordException {
+        SimpleBot.log.info("Saving Guild Configs");
+        for(Map.Entry<String,GuildConfig> entry : SimpleBot.gConfigs.entrySet()){
+            GuildConfig guildconfig = entry.getValue();
+            guildconfig.saveConfig();
+        }
+        SimpleBot.log.info("GuildConfigs saved.");
+    }
+
+
+
 }

@@ -11,7 +11,7 @@ class Configuration {
     private static Properties defaultProps;
     private static final File config = new File("config.properties");
 
-    public static Properties loadConfig(){
+    static Properties loadConfig(){
         InputStream input = Configuration.class.getResourceAsStream("/config.properties");
         defaultProps = new Properties();
         try{
@@ -68,5 +68,7 @@ class Configuration {
         }
         return prop;
     }
+
+
 
 }

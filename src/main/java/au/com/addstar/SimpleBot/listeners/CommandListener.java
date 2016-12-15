@@ -158,6 +158,8 @@ public class CommandListener {
                     c.loadConfig();
                     Utility.sendPrivateMessage(u, "Configurations reloaded");
                     return;
+                case "discorbotexit":
+                    SimpleBot.exit();
                 case "help":
                     sendAdminHelp(g, u, prefix);
                     break;
@@ -173,6 +175,7 @@ public class CommandListener {
                         List<IUser> users = m.getChannel().getGuild().getUsersByName(warned);
                         if (users.size() > 1) {
                             //todo  more than 1 user by that name
+                            Utility.sendPrivateMessage(u, "to many users with that name cant warn");
                         }
                     }
                     return;
@@ -211,6 +214,10 @@ public class CommandListener {
                     String code = mSplit[1];
                     Invitation invite = config.getInvitation(code);
                     if (invite == null) {
+                        invite = config.getExpiredInvite(code);
+                        SimpleBot.log.info(u.getName()+ " using expired invite code.");
+                    }
+                    if(invite == null){
                         Utility.sendPrivateMessage(u, "Invitation Code not found");
                     } else {
                         Utility.setUserNick(g, u, invite.getUserName());

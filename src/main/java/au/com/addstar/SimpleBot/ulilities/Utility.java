@@ -5,6 +5,7 @@ import au.com.addstar.SimpleBot.objects.Invitation;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -89,7 +90,7 @@ public class Utility {
         try {
            g.editUserRoles(u,newroles);
         } catch (MissingPermissionsException e) {
-            SimpleBot.log.error(" We dont have permission to set the role of " + u.getDisplayName(g) + " to " + newroles.toString());
+            SimpleBot.log.error(" We dont have permission to set the role of " + u.getDisplayName(g) + " to " + Arrays.toString(newroles));
             e.printStackTrace();
         } catch (RateLimitException | DiscordException e) {
             e.printStackTrace();
@@ -135,6 +136,10 @@ public class Utility {
         } else {
             return UUID.fromString(uuidstring);
         }
+    }
+
+    public IGuild getGuildFronName(String name){
+        return null;
     }
 
 
