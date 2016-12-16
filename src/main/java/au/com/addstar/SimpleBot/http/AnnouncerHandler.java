@@ -1,6 +1,7 @@
 package au.com.addstar.SimpleBot.http;
 
 import au.com.addstar.SimpleBot.SimpleBot;
+import au.com.addstar.SimpleBot.ulilities.Utility;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
@@ -8,6 +9,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
+import sx.blah.discord.handle.obj.IChannel;
+import sx.blah.discord.handle.obj.IGuild;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,7 +61,9 @@ public class AnnouncerHandler implements HttpHandler {
             if (request != null) {
                 message = request.get("message");
             }
-
+            IGuild guild = Utilities.getGuildbyName(path[2]);
+            IChannel channel = Utilities.getChannelbyName(guild, path[3]);
+            Utility.sendChannelMessage(channel.getID(),message);
             SimpleBot.log.info("Message recieved on Announcer: Guild: " + path[2] + " Channel:" + path[3] + "Message: " + message);
         }
         Utilities.doResponse(t,responseCode,contentHeaderList, response);

@@ -41,7 +41,14 @@ public class SimpleBot {
 
     public static void main(String[] args) {
         config = Configuration.loadConfig();
+        String token = config.getProperty("discordToken");
+        if(token==null){
+            SimpleBot.log.info("Server shut down initiated...");
+            SimpleBot.log.info("You must edit the config.properties file and add your discord app private token.");
+            System.exit(1);
+        }
         instance = login(config.getProperty("discordToken"));
+
         configureListeners();
         server = createHttpServer();
         addContexts(server);
@@ -105,6 +112,7 @@ public class SimpleBot {
 
 
     private static void close() throws DiscordException {
+        SimpleBot.log.info("Server shut down initiated...");
         SimpleBot.log.info("Saving Guild Configs");
         for(Map.Entry<String,GuildConfig> entry : SimpleBot.gConfigs.entrySet()){
             GuildConfig guildconfig = entry.getValue();

@@ -137,19 +137,4 @@ public class Utility {
             return UUID.fromString(uuidstring);
         }
     }
-
-    public IGuild getGuildFronName(String name){
-        return null;
-    }
-
-
-
-
-
-
-
-
-
-
-
 }

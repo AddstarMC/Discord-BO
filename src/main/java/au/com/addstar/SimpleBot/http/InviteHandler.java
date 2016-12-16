@@ -45,23 +45,7 @@ public class InviteHandler implements HttpHandler {
         String channelName = path[3];
         UUID uuid = Utility.StringtoUUID(path[4]);
         String user = path[5];
-        List<IGuild> guilds = SimpleBot.client.getGuilds();
-        IGuild guild = null;
-        int matches = 0;
-        for (IGuild g : guilds) {
-            if (g.getName().equals(guildName)) {
-                matches++;
-                guild = g;
-
-            }
-        }
-        if(matches>1){
-            responseCode = HttpStatus.SC_BAD_REQUEST;
-            contentHeaderList.add("application/text");
-            response = "Multiple Guilds found matching " + guildName;
-            Utilities.doResponse(t,responseCode,contentHeaderList,response);
-            return;
-        }
+        IGuild guild = Utilities.getGuildbyName(guildName);
         if (guild != null) {
             GuildConfig config = SimpleBot.gConfigs.get(guild.getID());
             Invitation pendingInvitation = checkInviteforUser(uuid, guild.getID());
@@ -80,11 +64,13 @@ public class InviteHandler implements HttpHandler {
                 SimpleBot.log.info("Stored Invite returned for " + pendingInvitation.getUserName() + " : " + pendingInvitation.getInviteCode());
             }
             List<IChannel> channels = SimpleBot.client.getGuildByID(guild.getID()).getChannelsByName(channelName);
-            IChannel channel;
-            IInvite invite = null;
-            if (channels.size() == 1) {
-                channel = channels.get(0);
-                if(pendingInvitation != null){
+            IChannel channel = Utilities.getChannelbyName(guild, channelName);
+            if (channel == null){
+                responseCode = HttpStatus.SC_BAD_REQUEST;
+                response = channels.size() + " channels found matching " + channelName;
+            }else{
+                IInvite invite = null;
+                    if(pendingInvitation != null){
                     invite = checkforInvite(channel, pendingInvitation);
                     if (invite == null) config.removeInvite(pendingInvitation.getInviteCode());
                 }
@@ -106,11 +92,7 @@ public class InviteHandler implements HttpHandler {
                 }else{
                     response = invite.getInviteCode();
                 }
-            }else{
-                responseCode = HttpStatus.SC_BAD_REQUEST;
-                response = channels.size() + " channels found matching " + channelName;
             }
-
             } else {
                 responseCode = HttpStatus.SC_BAD_REQUEST;
                 contentHeaderList.add("application/text");

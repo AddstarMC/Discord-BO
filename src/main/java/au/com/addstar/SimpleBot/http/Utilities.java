@@ -1,8 +1,11 @@
 package au.com.addstar.SimpleBot.http;
 
+import au.com.addstar.SimpleBot.SimpleBot;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import org.apache.http.HttpHeaders;
+import sx.blah.discord.handle.obj.IChannel;
+import sx.blah.discord.handle.obj.IGuild;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,5 +37,27 @@ class Utilities {
         OutputStream os = t.getResponseBody();
         os.write(response.getBytes());
         os.close();
+    }
+
+    static IGuild getGuildbyName(String name){
+        List<IGuild> guilds = SimpleBot.client.getGuilds();
+        IGuild guild = null;
+        int matches = 0;
+        for (IGuild g : guilds) {
+            if (g.getName().equals(name)) {
+                matches++;
+                guild = g;
+
+            }
+        }
+        if(matches>1){
+            return null;
+        }
+        return guild;
+    }
+    static IChannel getChannelbyName(IGuild guild, String name) {
+        List<IChannel> channels = SimpleBot.client.getGuildByID(guild.getID()).getChannelsByName(name);
+        if (channels.size() == 1) return channels.get(0);
+        return null;
     }
 }
