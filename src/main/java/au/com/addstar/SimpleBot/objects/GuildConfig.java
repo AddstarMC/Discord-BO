@@ -6,10 +6,7 @@ import com.google.gson.stream.JsonReader;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -248,6 +245,14 @@ public class GuildConfig {
         public Invitation getExpiredInvite(String code){
                 Invitation inv = inviteCache.get(code);
                 return (inv.hasExpired())?inv:null;
+        }
+
+        public List<Invitation> getPendingInvites(){
+                List<Invitation> invites = new ArrayList<>();
+                for (Map.Entry<String, Invitation> e : inviteCache.entrySet()){
+                        invites.add(e.getValue());
+                }
+                return invites;
         }
 
 

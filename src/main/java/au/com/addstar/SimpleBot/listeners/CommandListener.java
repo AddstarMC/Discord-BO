@@ -192,6 +192,16 @@ public class CommandListener {
                     SimpleBot.log.info(u.getName() + " deleted " + i + " messages from " + m.getChannel().getName());
                     deleteMessage(m);
                     return;
+                case "listpendinginvites":
+                    List<Invitation> invites = config.getPendingInvites();
+                    if (invites != null && invites.size() > 0) {
+                        for (Invitation inv : invites) {
+                            Long time = inv.getExpiryTime();
+                            Utility.sendPrivateMessage(u, "Invititation for " + inv.getUserName() + " Code: " + inv.getInviteCode() + "Expiry: " + Utility.getDate(time));
+                        }
+                    } else {
+                        Utility.sendPrivateMessage(u, "No invites found");
+                    }
                 case "help":
                     String builder = addStyle(Styles.BOLD,
                             SimpleBot.client.getOurUser().getDisplayName(g) +

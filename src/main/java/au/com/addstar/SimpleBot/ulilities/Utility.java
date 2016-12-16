@@ -5,7 +5,9 @@ import au.com.addstar.SimpleBot.objects.Invitation;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -136,5 +138,11 @@ public class Utility {
         } else {
             return UUID.fromString(uuidstring);
         }
+    }
+
+    public static String getDate(Long timelong){
+        Date date = new Date(timelong);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:SS");
+        return dateFormat.format(date);
     }
 }

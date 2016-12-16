@@ -33,7 +33,7 @@ public class Invitation{
         this.userName = userName;
     }
 
-    private long getExpiryTime() {
+    public long getExpiryTime() {
         return expiryTime;
     }
 
