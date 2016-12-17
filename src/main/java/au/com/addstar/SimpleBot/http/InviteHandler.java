@@ -75,9 +75,9 @@ public class InviteHandler implements HttpHandler {
                     if (invite == null) config.removeInvite(pendingInvitation.getInviteCode());
                 }
                 if (invite == null) {
-                    invite = createInvite(channel, 30 * 60, 1, false);
+                    invite = createInvite(channel, 120 * 60, 1, false);
                     if (invite != null) {
-                        Long expiryTime = System.currentTimeMillis() + (30 * 60 * 1000);
+                        Long expiryTime = System.currentTimeMillis() + (120 * 60 * 1000);
                         responseCode = HttpStatus.SC_OK;
                         responsebuilder.put("url","https://discord.gg/"+ invite.getInviteCode());
                         responsebuilder.put("cmd", config.getPrefix() + "register " + invite.getInviteCode());

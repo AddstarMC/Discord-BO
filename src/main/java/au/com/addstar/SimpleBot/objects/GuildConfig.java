@@ -21,6 +21,7 @@ public class GuildConfig {
         private String announceChannelID;
         private String modChannelID;
         private Boolean reportStatusChange;
+        private String expiryTime;
 
         private Map<String, Invitation> inviteCache;
 
