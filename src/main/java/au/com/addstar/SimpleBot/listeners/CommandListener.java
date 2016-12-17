@@ -131,6 +131,12 @@ public class CommandListener {
                                     Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldMChannel.getName());
                                 }
                                 return;
+                            case "expirytime":
+                                if (mSplit.length > 2) {
+                                    int exp = Integer.parseInt(mSplit[2]);
+                                    config.setExpiryTime(exp);
+                                }
+                                break ;
                             case "reportstatus":
                                 Boolean report = config.isReportStatusChange();
                                 if (mSplit.length > 2) {
@@ -242,7 +248,7 @@ public class CommandListener {
                         }
                         Utility.sendPrivateMessage(u,"Registration complete.");
                         SimpleBot.log.info("Registration complete.");
-                        config.removeInvite(invite.getInviteCode());
+                        config.removeInvitation(invite.getInviteCode());
                     }
                 }
                 deleteMessage(m);
@@ -266,6 +272,8 @@ public class CommandListener {
                 prefix + "set announcechannelid <channelID>  - Set the Announcment Channel" + "\n" +
                 prefix + "set modchannelid <channelID>  - Set the Mod reporting Channel" + "\n" +
                 prefix + "set reportstatus <true/false>  - Report Status Changes?" + "\n" +
+                prefix + "set expirytime <seconds>  - Invite Expiry Time?" + "\n" +
+
                 prefix + "reloadguildconfig  - Reloads the config from file. Does not save current." + "\n";
         Utility.sendPrivateMessage(u, builder);
     }

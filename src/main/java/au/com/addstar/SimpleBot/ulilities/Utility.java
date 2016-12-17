@@ -104,6 +104,7 @@ public class Utility {
             List<IInvite> invites = chan.getInvites();
             for(IInvite invite : invites){
                 if(invite.getInviteCode().equals(botinvite.getInviteCode()))return invite;
+                SimpleBot.log.info("Invite Code matched Discord Invite: " + invite.getInviteCode() +" Expiry: "  + getDate(botinvite.getExpiryTime()));
             }
         } catch (DiscordException | RateLimitException e) {
             e.printStackTrace();

@@ -36,9 +36,9 @@ public class InviteHandler implements HttpHandler {
         String requestPath = t.getRequestURI().getPath();
         String[] path = requestPath.split("/");
 
-        if(path.length <6) {
+        if (path.length < 6) {
             contentHeaderList.add("application/text");
-            Utilities.doResponse(t,responseCode,contentHeaderList, "Must have 5 parts");
+            Utilities.doResponse(t, responseCode, contentHeaderList, "Must have 5 parts");
             return;
         }
         String guildName = path[2];
@@ -46,64 +46,73 @@ public class InviteHandler implements HttpHandler {
         UUID uuid = Utility.StringtoUUID(path[4]);
         String user = path[5];
         IGuild guild = Utilities.getGuildbyName(guildName);
-        if (guild != null) {
-            GuildConfig config = SimpleBot.gConfigs.get(guild.getID());
-            Invitation pendingInvitation = checkInviteforUser(uuid, guild.getID());
-            if (pendingInvitation != null && pendingInvitation.hasExpired()){
-                config.removeInvite(pendingInvitation.getInviteCode());
-                pendingInvitation = null;
-            }else
-                if(pendingInvitation != null){
-                if(!pendingInvitation.getUserName().equals(user)){
-                    pendingInvitation.setUserName(user);
-                }
-                responseCode = HttpStatus.SC_OK;
-                responsebuilder.put("url","https://discord.gg/"+ pendingInvitation.getInviteCode());
-                responsebuilder.put("cmd", config.getPrefix() + "register " + pendingInvitation.getInviteCode());
-                Utilities.doJsonResponse(t,responseCode,responsebuilder);
-                SimpleBot.log.info("Stored Invite returned for " + pendingInvitation.getUserName() + " : " + pendingInvitation.getInviteCode());
+        if (guild == null) {
+            responseCode = HttpStatus.SC_BAD_REQUEST;
+            contentHeaderList.add("application/text");
+            response = "No Guilds found matching " + guildName;
+            Utilities.doResponse(t, responseCode, contentHeaderList, response);
+            return;
+        }
+        GuildConfig config = SimpleBot.gConfigs.get(guild.getID());
+        int expiry = config.getExpiryTime();
+        Invitation pendingInvitation = checkInviteforUser(uuid, guild.getID());
+        if (pendingInvitation != null && pendingInvitation.hasExpired()) {
+            SimpleBot.log.info("Pending Invite Code: " + pendingInvitation.getInviteCode() + "had expired and is being removed. Expiry: " + Utility.getDate(pendingInvitation.getExpiryTime()));
+            config.removeInvitation(pendingInvitation.getInviteCode());
+            pendingInvitation = null;
+        } else if (pendingInvitation != null) {
+            if (!pendingInvitation.getUserName().equals(user)) {
+                SimpleBot.log.info("Pending Invite Code: " + pendingInvitation.getInviteCode() + " was updated with a new username: " + user + " Old user:" + pendingInvitation.getUserName());
+
+                pendingInvitation.setUserName(user);
             }
-            List<IChannel> channels = SimpleBot.client.getGuildByID(guild.getID()).getChannelsByName(channelName);
-            IChannel channel = Utilities.getChannelbyName(guild, channelName);
-            if (channel == null){
-                responseCode = HttpStatus.SC_BAD_REQUEST;
-                response = channels.size() + " channels found matching " + channelName;
-            }else{
-                IInvite invite = null;
-                    if(pendingInvitation != null){
-                    invite = checkforInvite(channel, pendingInvitation);
-                    if (invite == null) config.removeInvite(pendingInvitation.getInviteCode());
-                }
+            responseCode = HttpStatus.SC_OK;
+            responsebuilder.put("url", "https://discord.gg/" + pendingInvitation.getInviteCode());
+            responsebuilder.put("cmd", config.getPrefix() + "register " + pendingInvitation.getInviteCode());
+            SimpleBot.log.info("Stored Invite will be returned for " + pendingInvitation.getUserName() + " : " + pendingInvitation.getInviteCode());
+
+        }
+        List<IChannel> channels = SimpleBot.client.getGuildByID(guild.getID()).getChannelsByName(channelName);
+        IChannel channel = Utilities.getChannelbyName(guild, channelName);
+        if (channel == null) {
+            responseCode = HttpStatus.SC_BAD_REQUEST;
+            response = channels.size() + " channels found matching " + channelName;
+        } else {
+            IInvite invite = null;
+            if (pendingInvitation != null) {
+                invite = checkforInvite(channel, pendingInvitation);
                 if (invite == null) {
-                    invite = createInvite(channel, 120 * 60, 1, false);
-                    if (invite != null) {
-                        Long expiryTime = System.currentTimeMillis() + (120 * 60 * 1000);
-                        responseCode = HttpStatus.SC_OK;
-                        responsebuilder.put("url","https://discord.gg/"+ invite.getInviteCode());
-                        responsebuilder.put("cmd", config.getPrefix() + "register " + invite.getInviteCode());
-                        Utilities.doJsonResponse(t,responseCode,responsebuilder);
-                        SimpleBot.log.info("Invite Code Generated for " + user + " : " + invite.getInviteCode());
-                        storeInvitation(uuid, user, expiryTime, invite.getInviteCode(),config);
-                    } else {
-                        responseCode = HttpStatus.SC_BAD_REQUEST;
-                        contentHeaderList.add("application/text");
-                        response = channel.getName() + " invite generation failed";
-                    }
-                }else{
-                    response = invite.getInviteCode();
+                    config.removeInvitation(pendingInvitation.getInviteCode());
+                    SimpleBot.log.info("Discord Invite associated with stored Invite had expired.  Detail:" + pendingInvitation.getUserName() + " : " + pendingInvitation.getInviteCode());
+                } else {
+                    Utilities.doJsonResponse(t, responseCode, responsebuilder);
+                    return;
                 }
             }
+
+            SimpleBot.log.info("Generating new invite for " + user);
+            invite = createInvite(channel, expiry, 1, false);
+            if (invite != null) {
+                Long expiryTime = System.currentTimeMillis() + (120 * 60 * 1000);
+                responseCode = HttpStatus.SC_OK;
+                responsebuilder.put("url", "https://discord.gg/" + invite.getInviteCode());
+                responsebuilder.put("cmd", config.getPrefix() + "register " + invite.getInviteCode());
+                Utilities.doJsonResponse(t, responseCode, responsebuilder);
+                SimpleBot.log.info("Invite Code Generated for " + user + " : " + invite.getInviteCode());
+                storeInvitation(uuid, user, expiryTime, invite.getInviteCode(), config);
+                return;
             } else {
                 responseCode = HttpStatus.SC_BAD_REQUEST;
                 contentHeaderList.add("application/text");
-                response = "No Guilds found matching " + guildName;
+                response = channel.getName() + " invite generation failed";
             }
-            Utilities.doResponse(t,responseCode,contentHeaderList,response);
         }
+        Utilities.doResponse(t, responseCode, contentHeaderList, response);
+    }
 
     private void storeInvitation(UUID uuid, String displayName, Long expiryTime, String invitecode,GuildConfig config){
         Invitation inv =  new Invitation(uuid, displayName, expiryTime, invitecode);
-        config.storeInvite(inv);
+        config.storeInvitation(inv);
     }
 
     private Invitation checkInviteforUser(UUID uuid,String guildID){

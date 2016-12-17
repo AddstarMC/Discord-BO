@@ -46,7 +46,7 @@ public class GuildConfigTest {
 
     @Test
     public void testStoreInvite() throws Exception {
-        testConfig.storeInvite(invite);
+        testConfig.storeInvitation(invite);
         Invitation retrieved = testConfig.getInvitation("12345");
         Assert.assertNotSame(retrieved, invite);
         retrieved = testConfig.getExpiredInvite("12345");
@@ -57,9 +57,9 @@ public class GuildConfigTest {
 
     @Test
     public void testRemoveInvite() throws Exception {
-        testConfig.storeInvite(createNewInvitation("12345"));
+        testConfig.storeInvitation(createNewInvitation("12345"));
         int size = testConfig.getInviteCache().size();
-        testConfig.removeInvite("12345");
+        testConfig.removeInvitation("12345");
         Assert.assertTrue(testConfig.getInviteCache().size() < size);
     }
 
@@ -67,8 +67,8 @@ public class GuildConfigTest {
     public void testSaveInvites() throws Exception {
         inviteFile.delete();
         //assertFalse(inviteFile.exists());
-        testConfig.storeInvite(createNewInvitation("65324"));
-        testConfig.storeInvite(createNewInvitation("65555"));
+        testConfig.storeInvitation(createNewInvitation("65324"));
+        testConfig.storeInvitation(createNewInvitation("65555"));
         testConfig.saveConfig();
         Assert.assertTrue(inviteFile.exists());
         Assert.assertTrue(inviteFile.length() > 0);

@@ -1,5 +1,6 @@
 package au.com.addstar.SimpleBot.objects;
 
+import au.com.addstar.SimpleBot.SimpleBot;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
@@ -21,7 +22,7 @@ public class GuildConfig {
         private String announceChannelID;
         private String modChannelID;
         private Boolean reportStatusChange;
-        private String expiryTime;
+        private Integer expiryTime; //expiry time in seconds
 
         private Map<String, Invitation> inviteCache;
 
@@ -108,6 +109,7 @@ public class GuildConfig {
                 announceChannelID = prop.getProperty("announceChannelID","");
                 modChannelID = prop.getProperty("modChannelID","");
                 reportStatusChange = Boolean.getBoolean(prop.getProperty("reportStatusChange", Boolean.toString(false)));
+                expiryTime = Integer.parseInt(prop.getProperty("expiryTime", "7200"));
                 loadInvites();
         }
 
@@ -132,6 +134,7 @@ public class GuildConfig {
         }
 
         private void saveInvites(){
+                SimpleBot.log.info("Saving Invitations to file");
                 if (inviteCache.size()==0)return;
                 Gson gsonencoder = new Gson();
                 File parent = new File ("guilds");
@@ -151,11 +154,14 @@ public class GuildConfig {
                 catch(IOException e){
                         e.printStackTrace();
                 }
+                SimpleBot.log.info("Save Completed...");
 
 
         }
 
         private void loadInvites(){
+                SimpleBot.log.info("Loading Invitations from file");
+                int size = (inviteCache!= null)?inviteCache.size():0;
                 Gson gsondecoder = new Gson();
                 File parent = new File ("guilds");
                 File sub =  new File(parent,id);
@@ -185,11 +191,15 @@ public class GuildConfig {
                                 }
                         }
                 }
+                if (inviteCache.size() > size) {
+                        int added = inviteCache.size() - size;
+                        SimpleBot.log.info("Loading Completed added " + added);
+                }
         }
 
 
 
-        private boolean checkSavedConfig(File config){
+        private boolean checkSavedConfig(File config) {
                 Properties prop = new Properties();
                 try (InputStream finput = new FileInputStream(config)) {
                         prop.clear();
@@ -200,11 +210,12 @@ public class GuildConfig {
                         e.printStackTrace();
                         return false;
                 }
-                return (prop.getProperty("welcomeMessage").equals(welcomeMessage)&&
-                        prop.getProperty("prefix").equals(prefix)&&
-                        prop.getProperty("announceChannelID").equals(announceChannelID)&&
-                        prop.getProperty("modChannelID").equals(modChannelID)&&
-                prop.getProperty("reportStatusChange").equals(reportStatusChange.toString()));
+                return (prop.getProperty("welcomeMessage").equals(welcomeMessage) &&
+                        prop.getProperty("prefix").equals(prefix) &&
+                        prop.getProperty("announceChannelID").equals(announceChannelID) &&
+                        prop.getProperty("modChannelID").equals(modChannelID) &&
+                        prop.getProperty("reportStatusChange").equals(reportStatusChange.toString()) &&
+                        prop.getProperty("expiryTime").equals(expiryTime.toString()));
         }
 
         private Properties createProperties(){
@@ -214,16 +225,18 @@ public class GuildConfig {
                 prop.setProperty("announceChannelID",announceChannelID);
                 prop.setProperty("modChannelID",modChannelID);
                 prop.setProperty("reportStatusChange",reportStatusChange.toString());
+                prop.setProperty("expiryTime",expiryTime.toString());
                 return prop;
         }
 
-        public Invitation storeInvite(Invitation value){
+        public Invitation storeInvitation(Invitation value){
                 if(!inviteCache.containsKey(value.getInviteCode())){
                         return inviteCache.put(value.getInviteCode(),value);
                 }
+                saveInvites();
                 return inviteCache.get(value.getInviteCode());
         }
-        public void removeInvite(String code){
+        public void removeInvitation(String code){
                 inviteCache.remove(code);
         }
 
@@ -254,6 +267,14 @@ public class GuildConfig {
                         invites.add(e.getValue());
                 }
                 return invites;
+        }
+
+        public int getExpiryTime() {
+                return expiryTime;
+        }
+
+        public void setExpiryTime(int expiryTime) {
+                this.expiryTime = expiryTime;
         }
 
 

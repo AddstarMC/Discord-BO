@@ -8,6 +8,7 @@ import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.PresenceUpdateEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.UserJoinEvent;
+import sx.blah.discord.handle.impl.events.UserLeaveEvent;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.handle.obj.Presences;
@@ -40,6 +41,14 @@ public class ManagementListener {
         Utility.sendPrivateMessage(u, config.getWelcomeMessage());
         Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has joined " + g.getName());
     }
+
+    public void onLeaveEvent(UserLeaveEvent e){
+        IUser u = e.getUser();
+        IGuild g = e.getGuild();
+        GuildConfig config = SimpleBot.gConfigs.get(g.getID());
+        Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has left  " + g.getName());
+    }
+
 
     @EventSubscriber
     public void onUserPresenceChange(PresenceUpdateEvent e){
