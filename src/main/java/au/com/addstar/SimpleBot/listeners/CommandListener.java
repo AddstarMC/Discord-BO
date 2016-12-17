@@ -202,13 +202,9 @@ public class CommandListener {
                     } else {
                         Utility.sendPrivateMessage(u, "No invites found");
                     }
+                    break;
                 case "help":
-                    String builder = addStyle(Styles.BOLD,
-                            SimpleBot.client.getOurUser().getDisplayName(g) +
-                                    " Moderator Help Text") +
-                            prefix + "purge <Number - Purge this number of messages" + "\n" +
-                            prefix + "warn <@Name> -- not yet implemented" + "\n";
-                    Utility.sendPrivateMessage(u, builder);
+                    sendModeraterHelp(g,u,prefix);
                 default:
 
             }
@@ -277,9 +273,10 @@ public class CommandListener {
     private void sendModeraterHelp(IGuild g,IUser u, String prefix){
         String builder = addStyle(Styles.BOLD,
                 SimpleBot.client.getOurUser().getDisplayName(g) +
-                        " Moderator Help Text") +"\n" +
+                        " Moderator Help Text") + " \n" +
                 prefix + "purge <Number - Purge this number of messages" + "\n" +
-                prefix + "warn <@Name> -- not yet implemented" + "\n";
+                prefix + "warn <@Name> -- not yet implemented" + "\n" +
+                prefix + "listpendinginvites  -- list all pending invites";
         Utility.sendPrivateMessage(u, builder);
     }
     private void sendUserHelp(IGuild g, IUser u, String prefix) {
@@ -287,8 +284,7 @@ public class CommandListener {
                 SimpleBot.client.getOurUser().getDisplayName(g) +
                         " User Help Text") +
                 "\n" +
-                prefix + "purge <Number - Purge this number of messages" + "\n" +
-                prefix + "warn <@Name> -- not yet implemented" + "\n";
+                prefix + "register <token>   - register on the server" + "\n";
         Utility.sendPrivateMessage(u, builder);
     }
     }
