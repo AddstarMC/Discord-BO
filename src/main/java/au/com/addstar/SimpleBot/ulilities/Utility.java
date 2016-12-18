@@ -99,36 +99,6 @@ public class Utility {
         }
     }
 
-    public static IInvite checkforInvite(IChannel chan, Invitation botinvite){
-        try {
-            List<IInvite> invites = chan.getInvites();
-            for(IInvite invite : invites){
-                if(invite.getInviteCode().equals(botinvite.getInviteCode()))return invite;
-                SimpleBot.log.info("Invite Code matched Discord Invite: " + invite.getInviteCode() +" Expiry: "  + getDate(botinvite.getExpiryTime()));
-            }
-        } catch (DiscordException | RateLimitException e) {
-            e.printStackTrace();
-        } catch (MissingPermissionsException e) {
-            SimpleBot.log.error(" We dont have permission to get channel invites");
-            e.printStackTrace();
-        }
-        return null;
-    }
-    public static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp){
-
-        return createInvite(chan, age, maxUses, true,true);
-    }
-
-    public static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp, boolean unique){
-        IInvite invite = null;
-        try {
-            invite = chan.createInvite(age, maxUses, temp, unique);
-        } catch (MissingPermissionsException | DiscordException | RateLimitException e) {
-            e.printStackTrace();
-        }
-        return invite;
-    }
-
 
     public static UUID StringtoUUID(String uuidstring){
         if (uuidstring.length() < 32) {

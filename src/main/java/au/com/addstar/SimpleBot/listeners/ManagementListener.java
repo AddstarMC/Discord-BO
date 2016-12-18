@@ -1,7 +1,9 @@
 package au.com.addstar.SimpleBot.listeners;
 
 import au.com.addstar.SimpleBot.SimpleBot;
+import au.com.addstar.SimpleBot.managers.UserManager;
 import au.com.addstar.SimpleBot.objects.GuildConfig;
+import au.com.addstar.SimpleBot.objects.McUser;
 import au.com.addstar.SimpleBot.ulilities.Utility;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
@@ -15,6 +17,7 @@ import sx.blah.discord.handle.obj.Presences;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -25,7 +28,6 @@ public class ManagementListener {
     @EventSubscriber
     public void onReadyEvent(ReadyEvent event){
         IDiscordClient client = event.getClient(); // Gets the client from the event object
-        IUser ourUser = client.getOurUser();// Gets the user represented by the client
         for (IGuild guild : client.getGuilds()){
             String id = guild.getID();
             GuildConfig config  =  new GuildConfig(id);
@@ -38,6 +40,11 @@ public class ManagementListener {
         IUser u = event.getUser();
         IGuild g = event.getGuild();
         GuildConfig config = SimpleBot.gConfigs.get(g.getID());
+        McUser user = UserManager.loadUserFromFile(u.getID());
+        if(user == null){
+            user = new McUser(u.getID());
+            UserManager.cacheUser(user);
+        }
         Utility.sendPrivateMessage(u, config.getWelcomeMessage());
         Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has joined " + g.getName());
     }
@@ -54,12 +61,23 @@ public class ManagementListener {
     public void onUserPresenceChange(PresenceUpdateEvent e){
         Presences p = e.getNewPresence();
         IUser u = e.getUser();
-        List<IGuild> guilds = e.getClient().getGuilds();
+        McUser user = UserManager.loadUser(u.getID());
         List<IGuild> userGuilds = new ArrayList<>();
-        for(IGuild g : guilds){
+        if(user != null){
+            for(Map.Entry<String, String> entry : user.getDisplayNames().entrySet()){
+                IGuild guild = e.getClient().getGuildByID(entry.getKey());
+                userGuilds.add(guild);
+            }
+        }else{
+            SimpleBot.log.info("User : " + u.getName() + "has been cached with no mcUuid you need to run an update on that user.");
+            user = new McUser(u.getID());
+            List<IGuild> guilds = e.getClient().getGuilds();
+            for(IGuild g : guilds){
             if(g.getUserByID(u.getID())!=null){
                 userGuilds.add(g);
+                user.addUpdateDisplayName(g.getID(),u.getDisplayName(g));
             }
+        }
         }
         String message = "";
         switch(p){

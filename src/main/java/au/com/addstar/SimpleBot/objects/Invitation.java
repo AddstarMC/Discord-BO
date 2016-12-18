@@ -21,7 +21,7 @@ public class Invitation{
         this.inviteCode = inviteCode;
     }
 
-    UUID getUuid() {
+    public UUID getUuid() {
         return uuid;
     }
 

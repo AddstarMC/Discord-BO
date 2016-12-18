@@ -1,6 +1,7 @@
 package au.com.addstar.SimpleBot.http;
 
 import au.com.addstar.SimpleBot.SimpleBot;
+import au.com.addstar.SimpleBot.managers.InvitationManager;
 import au.com.addstar.SimpleBot.objects.GuildConfig;
 import au.com.addstar.SimpleBot.objects.Invitation;
 import au.com.addstar.SimpleBot.ulilities.Utility;
@@ -14,8 +15,8 @@ import sx.blah.discord.handle.obj.IInvite;
 import java.io.IOException;
 import java.util.*;
 
-import static au.com.addstar.SimpleBot.ulilities.Utility.checkforInvite;
-import static au.com.addstar.SimpleBot.ulilities.Utility.createInvite;
+import static au.com.addstar.SimpleBot.managers.InvitationManager.checkforInvite;
+import static au.com.addstar.SimpleBot.managers.InvitationManager.createInvite;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -31,7 +32,7 @@ public class InviteHandler implements HttpHandler {
         SimpleBot.log.debug("InviteRequest received from " + t.getRemoteAddress());
         int responseCode = HttpStatus.SC_BAD_REQUEST;
         Map<String, String> responsebuilder = new HashMap<>();
-        String response = null;
+        String response ;
         List<String> contentHeaderList = new ArrayList<>();
         String requestPath = t.getRequestURI().getPath();
         String[] path = requestPath.split("/");
@@ -55,10 +56,10 @@ public class InviteHandler implements HttpHandler {
         }
         GuildConfig config = SimpleBot.gConfigs.get(guild.getID());
         int expiry = config.getExpiryTime();
-        Invitation pendingInvitation = checkInviteforUser(uuid, guild.getID());
+        Invitation pendingInvitation = InvitationManager.checkForUUIDInvite(config, uuid);
         if (pendingInvitation != null && pendingInvitation.hasExpired()) {
             SimpleBot.log.info("Pending Invite Code: " + pendingInvitation.getInviteCode() + "had expired and is being removed. Expiry: " + Utility.getDate(pendingInvitation.getExpiryTime()));
-            config.removeInvitation(pendingInvitation.getInviteCode());
+            InvitationManager.removeInvitation(config, pendingInvitation.getInviteCode());
             pendingInvitation = null;
         } else if (pendingInvitation != null) {
             if (!pendingInvitation.getUserName().equals(user)) {
@@ -78,11 +79,11 @@ public class InviteHandler implements HttpHandler {
             responseCode = HttpStatus.SC_BAD_REQUEST;
             response = channels.size() + " channels found matching " + channelName;
         } else {
-            IInvite invite = null;
+            IInvite invite ;
             if (pendingInvitation != null) {
                 invite = checkforInvite(channel, pendingInvitation);
                 if (invite == null) {
-                    config.removeInvitation(pendingInvitation.getInviteCode());
+                    InvitationManager.removeInvitation(config, pendingInvitation.getInviteCode());
                     SimpleBot.log.info("Discord Invite associated with stored Invite had expired.  Detail:" + pendingInvitation.getUserName() + " : " + pendingInvitation.getInviteCode());
                 } else {
                     Utilities.doJsonResponse(t, responseCode, responsebuilder);
@@ -99,7 +100,7 @@ public class InviteHandler implements HttpHandler {
                 responsebuilder.put("cmd", config.getPrefix() + "register " + invite.getInviteCode());
                 Utilities.doJsonResponse(t, responseCode, responsebuilder);
                 SimpleBot.log.info("Invite Code Generated for " + user + " : " + invite.getInviteCode());
-                storeInvitation(uuid, user, expiryTime, invite.getInviteCode(), config);
+                InvitationManager.storeInvitation(config,new Invitation(uuid, user, expiryTime, invite.getInviteCode()));
                 return;
             } else {
                 responseCode = HttpStatus.SC_BAD_REQUEST;
@@ -110,15 +111,6 @@ public class InviteHandler implements HttpHandler {
         Utilities.doResponse(t, responseCode, contentHeaderList, response);
     }
 
-    private void storeInvitation(UUID uuid, String displayName, Long expiryTime, String invitecode,GuildConfig config){
-        Invitation inv =  new Invitation(uuid, displayName, expiryTime, invitecode);
-        config.storeInvitation(inv);
-    }
-
-    private Invitation checkInviteforUser(UUID uuid,String guildID){
-        GuildConfig config = SimpleBot.gConfigs.get(guildID);
-        return config.checkForUUIDInvite(uuid);
-    }
 
 
 }

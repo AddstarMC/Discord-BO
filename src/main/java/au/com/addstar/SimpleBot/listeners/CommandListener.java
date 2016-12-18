@@ -1,8 +1,11 @@
 package au.com.addstar.SimpleBot.listeners;
 
 import au.com.addstar.SimpleBot.SimpleBot;
+import au.com.addstar.SimpleBot.managers.InvitationManager;
+import au.com.addstar.SimpleBot.managers.UserManager;
 import au.com.addstar.SimpleBot.objects.GuildConfig;
 import au.com.addstar.SimpleBot.objects.Invitation;
+import au.com.addstar.SimpleBot.objects.McUser;
 import au.com.addstar.SimpleBot.ulilities.Utility;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
@@ -199,7 +202,7 @@ public class CommandListener {
                     deleteMessage(m);
                     return;
                 case "listpendinginvites":
-                    List<Invitation> invites = config.getPendingInvites();
+                    List<Invitation> invites = InvitationManager.getPendingInvites(config);
                     if (invites != null && invites.size() > 0) {
                         for (Invitation inv : invites) {
                             Long time = inv.getExpiryTime();
@@ -224,9 +227,9 @@ public class CommandListener {
                     break;
                 } else {
                     String code = mSplit[1];
-                    Invitation invite = config.getInvitation(code);
+                    Invitation invite = InvitationManager.getInvitation(config, code);
                     if (invite == null) {
-                        invite = config.getExpiredInvite(code);
+                        invite = InvitationManager.getExpiredInvite(config, code);
                         SimpleBot.log.info(u.getName()+ " using expired invite code.");
                     }
                     if(invite == null){
@@ -247,8 +250,17 @@ public class CommandListener {
                             SimpleBot.log.info(u.getName() + " applied Role: "+userroles.get(0).getName());
                         }
                         Utility.sendPrivateMessage(u,"Registration complete.");
+                        McUser user = UserManager.loadUser(u.getID());
+                        if (user == null){
+                            SimpleBot.log.info("MCUSER was null - should have been created on join??.");
+                            user = new McUser(u.getID());
+                        }
+                        user.addUpdateDisplayName(g.getID(),invite.getUserName());
+                        user.setMinecraftUUID(invite.getUuid());
+                        UserManager.cacheUser(user);
+                        UserManager.saveUserToFile(user);
                         SimpleBot.log.info("Registration complete.");
-                        config.removeInvitation(invite.getInviteCode());
+                        InvitationManager.removeInvitation(config, invite.getInviteCode());
                     }
                 }
                 deleteMessage(m);
