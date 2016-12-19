@@ -29,9 +29,9 @@ public class GuildConfig {
                 announceChannelID = "";
                 modChannelID = "";
                 reportStatusChange = false;
-                loadConfig();
                 inviteCache =  new HashMap<>();
                 expiryTime = 7200;
+                loadConfig();
         }
 
         public void setInviteCache(Map<String, Invitation> inviteCache) {
@@ -104,9 +104,20 @@ public class GuildConfig {
                 try {
                         if (config.exists()) {
                                 InputStream finput = new FileInputStream(config);
-                                prop.clear();
-                                prop.load(finput);
+                                Properties fileprop = new Properties();
+                                fileprop.load(finput);
                                 finput.close();
+                                if (fileprop.size()<prop.size()){//check if we have any new defaults.
+                                        Enumeration e = prop.propertyNames();
+                                        while (e.hasMoreElements()){
+                                                String newprop = (String) e.nextElement();
+                                                if (fileprop.get(newprop) == null){
+                                                        fileprop.put(newprop,prop.get(newprop));
+                                                }
+                                        }
+
+                                }
+                                prop = fileprop;
                         } else {
                                 if (config.createNewFile()) {
                                         OutputStream out = new FileOutputStream(config);
