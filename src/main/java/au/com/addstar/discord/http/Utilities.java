@@ -1,6 +1,6 @@
-package au.com.addstar.SimpleBot.http;
+package au.com.addstar.discord.http;
 
-import au.com.addstar.SimpleBot.SimpleBot;
+import au.com.addstar.discord.SimpleBot;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import org.apache.http.HttpHeaders;

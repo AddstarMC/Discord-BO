@@ -1,4 +1,4 @@
-package au.com.addstar.SimpleBot.ulilities;
+package au.com.addstar.discord.ulilities;
 
 import sx.blah.discord.util.MessageBuilder.Styles;
 

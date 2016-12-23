@@ -1,7 +1,6 @@
-package au.com.addstar.SimpleBot.ulilities;
+package au.com.addstar.discord.ulilities;
 
-import au.com.addstar.SimpleBot.SimpleBot;
-import au.com.addstar.SimpleBot.objects.Invitation;
+import au.com.addstar.discord.SimpleBot;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
@@ -71,30 +70,6 @@ public class Utility {
         try {
             m.delete();
         } catch (MissingPermissionsException | RateLimitException | DiscordException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void setUserNick(IGuild g, IUser u, String nick){
-        try {
-            g.setUserNickname(u,nick);
-        } catch (MissingPermissionsException e) {
-            SimpleBot.log.error(" We dont have permission to set the nick of " + u.getDisplayName(g));
-        } catch (DiscordException | RateLimitException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void setRoleforUser(IGuild g, IUser u, IRole r){
-        List<IRole> currroles = g.getRolesForUser(u);
-        currroles.add(r);
-        IRole[] newroles = currroles.toArray(new IRole[0]);
-        try {
-           g.editUserRoles(u,newroles);
-        } catch (MissingPermissionsException e) {
-            SimpleBot.log.error(" We dont have permission to set the role of " + u.getDisplayName(g) + " to " + Arrays.toString(newroles));
-            e.printStackTrace();
-        } catch (RateLimitException | DiscordException e) {
             e.printStackTrace();
         }
     }

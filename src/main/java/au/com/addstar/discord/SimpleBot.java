@@ -1,11 +1,11 @@
-package au.com.addstar.SimpleBot;
+package au.com.addstar.discord;
 
-import au.com.addstar.SimpleBot.http.AnnouncerHandler;
-import au.com.addstar.SimpleBot.http.DefaultHandler;
-import au.com.addstar.SimpleBot.http.InviteHandler;
-import au.com.addstar.SimpleBot.listeners.CommandListener;
-import au.com.addstar.SimpleBot.listeners.ManagementListener;
-import au.com.addstar.SimpleBot.objects.GuildConfig;
+import au.com.addstar.discord.http.AnnouncerHandler;
+import au.com.addstar.discord.http.DefaultHandler;
+import au.com.addstar.discord.http.InviteHandler;
+import au.com.addstar.discord.listeners.CommandListener;
+import au.com.addstar.discord.listeners.ManagementListener;
+import au.com.addstar.discord.objects.GuildConfig;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package au.com.addstar.SimpleBot;
+package au.com.addstar.discord;
 
 import java.io.*;
 import java.util.Properties;

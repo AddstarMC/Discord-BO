@@ -1,4 +1,4 @@
-package au.com.addstar.SimpleBot.http;
+package au.com.addstar.discord.http;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;

@@ -1,9 +1,9 @@
-package au.com.addstar.SimpleBot.managers;
+package au.com.addstar.discord.managers;
 
-import au.com.addstar.SimpleBot.SimpleBot;
-import au.com.addstar.SimpleBot.objects.GuildConfig;
-import au.com.addstar.SimpleBot.objects.Invitation;
-import au.com.addstar.SimpleBot.ulilities.Utility;
+import au.com.addstar.discord.SimpleBot;
+import au.com.addstar.discord.objects.GuildConfig;
+import au.com.addstar.discord.objects.Invitation;
+import au.com.addstar.discord.ulilities.Utility;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;

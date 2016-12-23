@@ -3,9 +3,10 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>au.com.addstarmc.discordbot</groupId>
+    <groupId>au.com.addstarmc.discord</groupId>
     <artifactId>DiscordBot</artifactId>
     <version>0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
     <developers>
         <developer>
             <id>Narimm</id>
@@ -60,6 +61,12 @@
             <version>15.0</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>1.8.5</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <repositories>
         <repository> <!-- This repo fixes issues with transitive dependencies -->
@@ -97,7 +104,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <mainClass>au.com.addstar.SimpleBot.SimpleBot</mainClass>
+                            <mainClass>au.com.addstar.discord.SimpleBot</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

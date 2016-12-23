@@ -1,6 +1,6 @@
-package au.com.addstar.SimpleBot.objects;
+package au.com.addstar.discord.objects;
 
-import au.com.addstar.SimpleBot.managers.InvitationManager;
+import au.com.addstar.discord.managers.InvitationManager;
 
 import java.io.*;
 import java.util.*;

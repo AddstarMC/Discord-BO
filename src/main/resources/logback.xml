@@ -7,7 +7,7 @@
         </layout>
     </appender>
 
-    <logger name="au.com.addstar.SimpleBot" level="INFO"/>
+    <logger name="au.com.addstar.discord" level="INFO"/>
 
 
     <root level="debug">

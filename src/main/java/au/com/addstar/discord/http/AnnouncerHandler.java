@@ -1,7 +1,7 @@
-package au.com.addstar.SimpleBot.http;
+package au.com.addstar.discord.http;
 
-import au.com.addstar.SimpleBot.SimpleBot;
-import au.com.addstar.SimpleBot.ulilities.Utility;
+import au.com.addstar.discord.SimpleBot;
+import au.com.addstar.discord.ulilities.Utility;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;

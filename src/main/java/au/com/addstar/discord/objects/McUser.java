@@ -1,4 +1,4 @@
-package au.com.addstar.SimpleBot.objects;
+package au.com.addstar.discord.objects;
 
 import org.jetbrains.annotations.Nullable;
 

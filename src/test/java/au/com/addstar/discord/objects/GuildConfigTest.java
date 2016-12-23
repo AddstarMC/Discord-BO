@@ -1,6 +1,6 @@
-package au.com.addstar.SimpleBot.objects;
+package au.com.addstar.discord.objects;
 
-import au.com.addstar.SimpleBot.managers.InvitationManager;
+import au.com.addstar.discord.managers.InvitationManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.file.FileAlreadyExistsException;
 import java.util.UUID;
 
 /**
@@ -159,14 +158,5 @@ public class GuildConfigTest {
         }catch (IOException | NullPointerException e){
             e.printStackTrace();
         }
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        File parent = new File("guilds");
-        if (parent.exists()){
-            parent.delete();
-        }
-
     }
 }

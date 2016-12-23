@@ -1,16 +1,17 @@
-package au.com.addstar.SimpleBot.listeners;
+package au.com.addstar.discord.listeners;
 
-import au.com.addstar.SimpleBot.SimpleBot;
-import au.com.addstar.SimpleBot.managers.UserManager;
-import au.com.addstar.SimpleBot.objects.GuildConfig;
-import au.com.addstar.SimpleBot.objects.McUser;
-import au.com.addstar.SimpleBot.ulilities.Utility;
+import au.com.addstar.discord.SimpleBot;
+import au.com.addstar.discord.managers.UserManager;
+import au.com.addstar.discord.objects.GuildConfig;
+import au.com.addstar.discord.objects.McUser;
+import au.com.addstar.discord.ulilities.Utility;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.PresenceUpdateEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.UserJoinEvent;
 import sx.blah.discord.handle.impl.events.UserLeaveEvent;
+import sx.blah.discord.handle.impl.obj.User;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.handle.obj.Presences;
@@ -66,7 +67,7 @@ public class ManagementListener {
         if(user != null){
             for(Map.Entry<String, String> entry : user.getDisplayNames().entrySet()){
                 IGuild guild = e.getClient().getGuildByID(entry.getKey());
-                userGuilds.add(guild);
+                if (guild!=null)userGuilds.add(guild);
             }
         }else{
             SimpleBot.log.info("User : " + u.getName() + "has been cached with no mcUuid you need to run an update on that user.");
@@ -75,8 +76,9 @@ public class ManagementListener {
             for(IGuild g : guilds){
             if(g.getUserByID(u.getID())!=null){
                 userGuilds.add(g);
-                user.addUpdateDisplayName(g.getID(),u.getDisplayName(g));
+                UserManager.checkUserDisplayName(user,g);
             }
+            UserManager.saveUser(user);
         }
         }
         String message = "";

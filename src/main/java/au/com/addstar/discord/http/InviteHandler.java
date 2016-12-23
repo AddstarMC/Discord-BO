@@ -1,10 +1,10 @@
-package au.com.addstar.SimpleBot.http;
+package au.com.addstar.discord.http;
 
-import au.com.addstar.SimpleBot.SimpleBot;
-import au.com.addstar.SimpleBot.managers.InvitationManager;
-import au.com.addstar.SimpleBot.objects.GuildConfig;
-import au.com.addstar.SimpleBot.objects.Invitation;
-import au.com.addstar.SimpleBot.ulilities.Utility;
+import au.com.addstar.discord.SimpleBot;
+import au.com.addstar.discord.managers.InvitationManager;
+import au.com.addstar.discord.objects.GuildConfig;
+import au.com.addstar.discord.objects.Invitation;
+import au.com.addstar.discord.ulilities.Utility;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.http.HttpStatus;
@@ -15,8 +15,8 @@ import sx.blah.discord.handle.obj.IInvite;
 import java.io.IOException;
 import java.util.*;
 
-import static au.com.addstar.SimpleBot.managers.InvitationManager.checkforInvite;
-import static au.com.addstar.SimpleBot.managers.InvitationManager.createInvite;
+import static au.com.addstar.discord.managers.InvitationManager.checkforInvite;
+import static au.com.addstar.discord.managers.InvitationManager.createInvite;
 
 /**
  * Created for use for the Add5tar MC Minecraft server

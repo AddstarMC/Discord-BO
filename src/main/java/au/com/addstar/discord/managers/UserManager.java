@@ -1,14 +1,22 @@
-package au.com.addstar.SimpleBot.managers;
+package au.com.addstar.discord.managers;
 
-import au.com.addstar.SimpleBot.SimpleBot;
-import au.com.addstar.SimpleBot.objects.McUser;
+import au.com.addstar.discord.SimpleBot;
+import au.com.addstar.discord.objects.McUser;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.jetbrains.annotations.Nullable;
 import sx.blah.discord.handle.obj.IGuild;
+import sx.blah.discord.handle.obj.IRole;
+import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.MissingPermissionsException;
+import sx.blah.discord.util.RateLimitException;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,13 +25,13 @@ import java.util.Map;
  */
 public class UserManager {
 
-    private static Map<String, McUser> userCache;
+    private static Map<String, McUser> userCache = new HashMap<>();
     private static Gson gsonencoder = new Gson();
     private static Type type = new TypeToken<McUser>(){}.getType();
 
 
-    public void addGuildtoUser(McUser user, String displayName, IGuild guild) {
-
+    public static void addGuildtoUser(McUser user, String displayName, IGuild guild) {
+        user.addUpdateDisplayName(guild.getID(),displayName);
     }
 
     public static void cacheUser(McUser u) {
@@ -133,8 +141,48 @@ public class UserManager {
         }
         return null;
 
-
-
     }
+
+    public static void setUserNick(IGuild g, IUser u, String nick){
+        try {
+            g.setUserNickname(u,nick);
+        } catch (MissingPermissionsException e) {
+            SimpleBot.log.error(" We dont have permission to set the nick of " + u.getDisplayName(g));
+        } catch (DiscordException | RateLimitException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void setRoleforUser(IGuild g, IUser u, IRole r){
+        List<IRole> currroles = g.getRolesForUser(u);
+        currroles.add(r);
+        IRole[] newroles = currroles.toArray(new IRole[0]);
+        try {
+           g.editUserRoles(u,newroles);
+        } catch (MissingPermissionsException e) {
+            SimpleBot.log.error(" We dont have permission to set the role of " + u.getDisplayName(g) + " to " + Arrays.toString(newroles));
+            e.printStackTrace();
+        } catch (RateLimitException | DiscordException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void checkUserDisplayName(McUser user, IGuild guild){
+        String savedName = user.getDisplayName(guild.getID());
+        String currName = guild.getUserByID(user.getDiscordID()).getDisplayName(guild);
+        if(savedName != null){
+        if(savedName != currName){
+            SimpleBot.log.info("Discord User: " + user.getDiscordID() + " has updated thier displayName. Resetting");
+            //todo hook back and check for update in MC
+            IUser discordUser = guild.getUserByID(user.getDiscordID());
+            setUserNick(guild,discordUser,savedName);
+            }
+        }else{
+            user.addUpdateDisplayName(guild.getID(),currName);
+            saveUser(user);
+        }
+    }
+
+
 
 }

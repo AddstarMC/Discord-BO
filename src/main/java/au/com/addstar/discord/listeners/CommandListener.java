@@ -1,12 +1,12 @@
-package au.com.addstar.SimpleBot.listeners;
+package au.com.addstar.discord.listeners;
 
-import au.com.addstar.SimpleBot.SimpleBot;
-import au.com.addstar.SimpleBot.managers.InvitationManager;
-import au.com.addstar.SimpleBot.managers.UserManager;
-import au.com.addstar.SimpleBot.objects.GuildConfig;
-import au.com.addstar.SimpleBot.objects.Invitation;
-import au.com.addstar.SimpleBot.objects.McUser;
-import au.com.addstar.SimpleBot.ulilities.Utility;
+import au.com.addstar.discord.SimpleBot;
+import au.com.addstar.discord.managers.InvitationManager;
+import au.com.addstar.discord.managers.UserManager;
+import au.com.addstar.discord.objects.GuildConfig;
+import au.com.addstar.discord.objects.Invitation;
+import au.com.addstar.discord.objects.McUser;
+import au.com.addstar.discord.ulilities.Utility;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
@@ -16,9 +16,9 @@ import sx.blah.discord.util.MessageList;
 import java.util.EnumSet;
 import java.util.List;
 
-import static au.com.addstar.SimpleBot.ulilities.MessageFormatter.addStyle;
-import static au.com.addstar.SimpleBot.ulilities.Utility.deleteMessage;
-import static au.com.addstar.SimpleBot.ulilities.Utility.deleteMessages;
+import static au.com.addstar.discord.ulilities.MessageFormatter.addStyle;
+import static au.com.addstar.discord.ulilities.Utility.deleteMessage;
+import static au.com.addstar.discord.ulilities.Utility.deleteMessages;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -235,7 +235,7 @@ public class CommandListener {
                     if(invite == null){
                         Utility.sendPrivateMessage(u, "Invitation Code not found");
                     } else {
-                        Utility.setUserNick(g, u, invite.getUserName());
+                        UserManager.setUserNick(g, u, invite.getUserName());
                         SimpleBot.log.info(u.getName() + " has agreed to the rules. Nicknamed: " + invite.getUserName());
                         Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has agreed to the rules.  Welcome to " + g.getName());
                         List<IRole> userroles = g.getRolesByName("member");
@@ -246,7 +246,7 @@ public class CommandListener {
                             SimpleBot.log.warn(" No role found for \"member\"");
                         }
                         if(userroles.size() == 1){
-                            Utility.setRoleforUser(g, u, userroles.get(0));
+                            UserManager.setRoleforUser(g, u, userroles.get(0));
                             SimpleBot.log.info(u.getName() + " applied Role: "+userroles.get(0).getName());
                         }
                         Utility.sendPrivateMessage(u,"Registration complete.");
