@@ -113,7 +113,6 @@ public class InvitationManager {
             }
         }
     }
-    @Nullable
     public static Invitation checkForUUIDInvite(GuildConfig config, UUID uuid) {
         for (Map.Entry<String,Invitation> e : config.getInviteCache().entrySet()){
             UUID stored = e.getValue().getUuid();
@@ -123,13 +122,12 @@ public class InvitationManager {
         }
         return null;
     }
-    @Nullable
+
     public static Invitation getInvitation(GuildConfig config, String code){
         Invitation inv = config.getInviteCache().get(code);
         if (inv.hasExpired())return null;
         return inv;
     }
-    @Nullable
     public static Invitation getExpiredInvite(GuildConfig config, String code){
         Invitation inv = config.getInviteCache().get(code);
         return (inv.hasExpired())?inv:null;
@@ -142,7 +140,6 @@ public class InvitationManager {
         }
         return invites;
     }
-    @Nullable
     public static IInvite checkforInvite(IChannel chan, Invitation botinvite){
         try {
             List<IInvite> invites = chan.getInvites();
@@ -158,12 +155,10 @@ public class InvitationManager {
         }
         return null;
     }
-@Nullable
     public static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp){
 
         return createInvite(chan, age, maxUses, true,true);
     }
-@Nullable
     public static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp, boolean unique){
         IInvite invite = null;
         try {

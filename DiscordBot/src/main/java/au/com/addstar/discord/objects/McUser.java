@@ -40,7 +40,7 @@ public class McUser {
     public void addUpdateDisplayName(String guildID, String name){
         displayNames.put(guildID,name);
     }
-    @Nullable
+
     public String getDisplayName(String guildId){
         return displayNames.get(guildId);
     }

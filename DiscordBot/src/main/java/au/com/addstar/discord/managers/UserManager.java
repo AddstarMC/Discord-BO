@@ -116,12 +116,10 @@ public class UserManager {
         SimpleBot.log.info("User saved to disk");
 
     }
-    @Nullable
     public static McUser loadUser(String id){
         McUser user = loadfromCache(id);
         return(user == null)?loadUserFromFile(id):user;
     }
-@Nullable
     public static McUser loadUserFromFile(String id){
         File parent = new File("users");
         if(!parent.exists()){
