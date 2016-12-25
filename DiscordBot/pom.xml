@@ -60,11 +60,10 @@
     </repositories>
     <build>
         <finalName>${project.artifactId}-${project.version}-${build.number}</finalName>
-        <sourceDirectory>DiscordBot/src/main/java</sourceDirectory>
         <defaultGoal>clean install</defaultGoal>
         <resources>
             <resource>
-                <directory>DiscordBot/src/main/resources</directory>
+                <directory>src/main/resources</directory>
                 <targetPath>.</targetPath>
                 <filtering>true</filtering>
                 <includes>
@@ -111,9 +110,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <workingDirectory>${project.build.directory}</workingDirectory>
-                </configuration>
+                <version>2.19.1</version>
             </plugin>
             <plugin>
                 <groupId>org.eluder.coveralls</groupId>
@@ -137,8 +134,12 @@
                 <artifactId>cobertura-maven-plugin</artifactId>
                 <version>2.7</version>
                 <configuration>
-                    <check></check>
-                    <format>xml</format>
+                    <check>
+                        <lineRate>5</lineRate>
+                    </check>
+                    <formats>
+                        <format>xml</format>
+                    </formats>
                     <aggregate>true</aggregate>
                 </configuration>
             </plugin>

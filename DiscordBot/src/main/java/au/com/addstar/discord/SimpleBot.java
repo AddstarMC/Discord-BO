@@ -55,11 +55,14 @@ public class SimpleBot {
         server.setExecutor(null);
         server.start();
         log.info("HttpServer started on " + server.getAddress().getHostString() +":"+ server.getAddress().getPort());
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                close();
-            } catch (DiscordException e) {
-                e.printStackTrace();
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    close();
+                } catch (DiscordException e) {
+                    e.printStackTrace();
+                }
             }
         }, "Shutdown-thread"));
     }
