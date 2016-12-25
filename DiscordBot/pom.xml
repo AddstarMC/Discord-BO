@@ -125,7 +125,7 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
-                        <phase>test</phase>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -142,6 +142,15 @@
                     </formats>
                     <aggregate>true</aggregate>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>cover</id>
+                        <goals>
+                            <goal>cobertura</goal>
+                        </goals>
+                        <phase>test</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
