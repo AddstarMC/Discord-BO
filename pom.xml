@@ -50,6 +50,13 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19.1</version>
+                <configuration>
+                    <workingDirectory>${java.io.tmpdir}</workingDirectory>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
