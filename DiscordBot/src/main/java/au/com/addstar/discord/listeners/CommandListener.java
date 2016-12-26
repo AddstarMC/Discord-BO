@@ -186,6 +186,7 @@ public class CommandListener {
                             //todo  more than 1 user by that name
                             Utility.sendPrivateMessage(u, "to many users with that name cant warn");
                         }
+
                     }
                     return;
                 case "purge":

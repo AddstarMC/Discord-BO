@@ -29,6 +29,24 @@ public class UserManager {
     private static Gson gsonencoder = new Gson();
     private static Type type = new TypeToken<McUser>(){}.getType();
 
+    public static void initialize(){
+        List<IGuild> guilds = SimpleBot.client.getGuilds();
+        for (IGuild guild : guilds){
+            List<IUser> users = guild.getUsers();
+            for(IUser user : users){
+                McUser mcUser = loadUserFromFile(user.getID());
+                if (mcUser == null){
+                    SimpleBot.log.info("No save exists for User:" + user.getID());
+                    mcUser = new McUser(user.getID());
+                    mcUser.addUpdateDisplayName(guild.getID(),user.getDisplayName(guild));
+                    saveUserToFile(mcUser);
+                }
+                cacheUser(mcUser);
+            }
+        }
+    }
+
+
 
     public static void addGuildtoUser(McUser user, String displayName, IGuild guild) {
         user.addUpdateDisplayName(guild.getID(),displayName);
