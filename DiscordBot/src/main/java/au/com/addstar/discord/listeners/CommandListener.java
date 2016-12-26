@@ -258,8 +258,7 @@ public class CommandListener {
                         }
                         user.addUpdateDisplayName(g.getID(),invite.getUserName());
                         user.setMinecraftUUID(invite.getUuid());
-                        UserManager.cacheUser(user);
-                        UserManager.saveUserToFile(user);
+                        UserManager.saveUser(user);
                         SimpleBot.log.info("Registration complete.");
                         InvitationManager.removeInvitation(config, invite.getInviteCode());
                     }

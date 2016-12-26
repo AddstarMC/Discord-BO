@@ -34,7 +34,7 @@ public class ManagementListener {
             GuildConfig config  =  new GuildConfig(id);
             SimpleBot.gConfigs.put(id, config);
         }
-        UserManager.initialize();
+        UserManager.initialize(SimpleBot.client);
     }
 
     @EventSubscriber

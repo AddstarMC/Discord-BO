@@ -4,7 +4,7 @@ import au.com.addstar.discord.SimpleBot;
 import au.com.addstar.discord.objects.McUser;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.jetbrains.annotations.Nullable;
+import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IRole;
 import sx.blah.discord.handle.obj.IUser;
@@ -29,8 +29,8 @@ public class UserManager {
     private static Gson gsonencoder = new Gson();
     private static Type type = new TypeToken<McUser>(){}.getType();
 
-    public static void initialize(){
-        List<IGuild> guilds = SimpleBot.client.getGuilds();
+    public static void initialize(IDiscordClient client){
+        List<IGuild> guilds = client.getGuilds();
         for (IGuild guild : guilds){
             List<IUser> users = guild.getUsers();
             for(IUser user : users){
