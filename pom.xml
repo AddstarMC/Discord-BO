@@ -8,6 +8,7 @@
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
+        <module>discordCore</module>
         <module>DiscordBot</module>
         <module>DiscordBungee</module>
     </modules>
@@ -40,7 +41,8 @@
     </scm>
 	<properties>
 	        <build.number/>
-	</properties>
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <build>
         <plugins>
             <plugin>

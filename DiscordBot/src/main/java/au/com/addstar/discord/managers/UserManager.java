@@ -1,7 +1,9 @@
 package au.com.addstar.discord.managers;
 
 import au.com.addstar.discord.SimpleBot;
+import au.com.addstar.discord.objects.Guild;
 import au.com.addstar.discord.objects.McUser;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import sx.blah.discord.api.IDiscordClient;
@@ -45,6 +47,25 @@ public class UserManager {
             }
         }
     }
+
+    /**
+     *
+     * @param guildID the guild ID to report on
+     * @return Map a map of discordID and @{Code McUser}
+     */
+    public static Map<String, McUser> getAllGuildUsers(String guildID){
+        Map<String, McUser> result = new HashMap<>();
+        for(Map.Entry<String, McUser> e: userCache.entrySet()){
+            for(Map.Entry<String, String> d: e.getValue().getDisplayNames().entrySet()){
+                if(d.getKey().equals(guildID)) {
+                    result.put(e.getKey(), e.getValue());
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
 
 
 
@@ -187,7 +208,7 @@ public class UserManager {
         String savedName = user.getDisplayName(guild.getID());
         String currName = guild.getUserByID(user.getDiscordID()).getDisplayName(guild);
         if(savedName != null){
-        if(savedName != currName){
+        if(!savedName.equals(currName)){
             SimpleBot.log.info("Discord User: " + user.getDiscordID() + " has updated thier displayName. Resetting");
             //todo hook back and check for update in MC
             IUser discordUser = guild.getUserByID(user.getDiscordID());

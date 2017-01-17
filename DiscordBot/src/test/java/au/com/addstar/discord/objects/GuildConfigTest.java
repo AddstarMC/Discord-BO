@@ -56,6 +56,7 @@ public class GuildConfigTest {
         Invitation retrieved = InvitationManager.getInvitation(testConfig,"Test12345");
         Assert.assertNull(retrieved);
         retrieved = InvitationManager.getExpiredInvite(testConfig,"Test12345");
+        Assert.assertNotNull(retrieved);
         Assert.assertTrue(retrieved.equals(invite));
 
     }
@@ -100,13 +101,14 @@ public class GuildConfigTest {
             parent.mkdir();
         }
         File outFile = new File(parent, "200000000000000000.properties");
-
-        if(!outFile.delete()){
-            try {
-                throw new IOException("Could not delete file"){
-                };
-            } catch (IOException e) {
-               System.err.print(e.getLocalizedMessage());
+        if(outFile.exists()) {
+            if (!outFile.delete()) {
+                try {
+                    throw new IOException("Could not delete file") {
+                    };
+                } catch (IOException e) {
+                    System.err.print(e.getLocalizedMessage());
+                }
             }
         }
         try {
@@ -134,12 +136,14 @@ public class GuildConfigTest {
             sub.mkdir();
         }
         inviteFile = new File(sub, "invites.json");
-        if(!inviteFile.delete()){
-            try {
-                throw new IOException("Could not delete file"){
-                };
-            } catch (IOException e) {
-                System.err.print(e.getLocalizedMessage());
+        if(inviteFile.exists()) {
+            if (!inviteFile.delete()) {
+                try {
+                    throw new IOException("Could not delete file") {
+                    };
+                } catch (IOException e) {
+                    System.err.print(e.getLocalizedMessage());
+                }
             }
         }
         try {

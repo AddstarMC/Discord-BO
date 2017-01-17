@@ -5,7 +5,9 @@ import au.com.addstar.discord.http.DefaultHandler;
 import au.com.addstar.discord.http.InviteHandler;
 import au.com.addstar.discord.listeners.CommandListener;
 import au.com.addstar.discord.listeners.ManagementListener;
+import au.com.addstar.discord.objects.Guild;
 import au.com.addstar.discord.objects.GuildConfig;
+import au.com.addstar.discord.socketClient.BungeeComClient;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,14 +31,14 @@ public class SimpleBot {
     public static SimpleBot instance;
     public static IDiscordClient client;
     public static Properties config;
-    public static HashMap<String,GuildConfig> gConfigs;
+    public static HashMap<String,Guild> guilds;
     static HttpServer server;
     public static final Logger log = LoggerFactory.getLogger(SimpleBot.class);
 
 
     public SimpleBot(IDiscordClient client) {
         SimpleBot.client = client;
-        gConfigs = new HashMap<>();
+        guilds = new HashMap<>();
     }
 
     public static void main(String[] args) {
@@ -117,8 +119,8 @@ public class SimpleBot {
     private static void close() throws DiscordException {
         SimpleBot.log.info("Server shut down initiated...");
         SimpleBot.log.info("Saving Guild Configs");
-        for(Map.Entry<String,GuildConfig> entry : SimpleBot.gConfigs.entrySet()){
-            GuildConfig guildconfig = entry.getValue();
+        for(Map.Entry<String,Guild> entry : SimpleBot.guilds.entrySet()){
+            GuildConfig guildconfig = entry.getValue().getConfig();
             guildconfig.saveConfig();
         }
         SimpleBot.log.info("GuildConfigs saved.");

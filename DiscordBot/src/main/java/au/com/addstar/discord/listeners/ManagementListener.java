@@ -2,6 +2,7 @@ package au.com.addstar.discord.listeners;
 
 import au.com.addstar.discord.SimpleBot;
 import au.com.addstar.discord.managers.UserManager;
+import au.com.addstar.discord.objects.Guild;
 import au.com.addstar.discord.objects.GuildConfig;
 import au.com.addstar.discord.objects.McUser;
 import au.com.addstar.discord.ulilities.Utility;
@@ -11,7 +12,6 @@ import sx.blah.discord.handle.impl.events.PresenceUpdateEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.impl.events.UserJoinEvent;
 import sx.blah.discord.handle.impl.events.UserLeaveEvent;
-import sx.blah.discord.handle.impl.obj.User;
 import sx.blah.discord.handle.obj.IGuild;
 import sx.blah.discord.handle.obj.IUser;
 import sx.blah.discord.handle.obj.Presences;
@@ -32,7 +32,8 @@ public class ManagementListener {
         for (IGuild guild : client.getGuilds()){
             String id = guild.getID();
             GuildConfig config  =  new GuildConfig(id);
-            SimpleBot.gConfigs.put(id, config);
+            Guild g = new Guild(config);
+            SimpleBot.guilds.put(id, g);
         }
         UserManager.initialize(SimpleBot.client);
     }
@@ -41,7 +42,7 @@ public class ManagementListener {
     public void onJoinEvent(UserJoinEvent event){
         IUser u = event.getUser();
         IGuild g = event.getGuild();
-        GuildConfig config = SimpleBot.gConfigs.get(g.getID());
+        GuildConfig config = SimpleBot.guilds.get(g.getID()).getConfig();
         McUser user = UserManager.loadUserFromFile(u.getID());
         if(user == null){
             user = new McUser(u.getID());
@@ -54,7 +55,7 @@ public class ManagementListener {
     public void onLeaveEvent(UserLeaveEvent e){
         IUser u = e.getUser();
         IGuild g = e.getGuild();
-        GuildConfig config = SimpleBot.gConfigs.get(g.getID());
+        GuildConfig config = SimpleBot.guilds.get(g.getID()).getConfig();
         Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has left  " + g.getName());
     }
 
@@ -100,7 +101,7 @@ public class ManagementListener {
                 message = " has started streaming";
         }
         for(IGuild g : userGuilds){
-            GuildConfig config = SimpleBot.gConfigs.get(g.getID());
+            GuildConfig config = SimpleBot.guilds.get(g.getID()).getConfig();
             String channelID =config.getModChannelID();
             Boolean report = config.isReportStatusChange();
             if(channelID != null && channelID.length()>0 && report) {

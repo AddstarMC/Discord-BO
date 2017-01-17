@@ -3,6 +3,8 @@ package au.com.addstar.discord.listeners;
 import au.com.addstar.discord.SimpleBot;
 import au.com.addstar.discord.managers.InvitationManager;
 import au.com.addstar.discord.managers.UserManager;
+import au.com.addstar.discord.messages.UpdatePlayersMessage;
+import au.com.addstar.discord.objects.Guild;
 import au.com.addstar.discord.objects.GuildConfig;
 import au.com.addstar.discord.objects.Invitation;
 import au.com.addstar.discord.objects.McUser;
@@ -15,6 +17,7 @@ import sx.blah.discord.util.MessageList;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 import static au.com.addstar.discord.ulilities.MessageFormatter.addStyle;
 import static au.com.addstar.discord.ulilities.Utility.deleteMessage;
@@ -35,7 +38,7 @@ public class CommandListener {
             return;//no handling PMs here
         }
         IGuild g = m.getGuild();
-        GuildConfig config = SimpleBot.gConfigs.get(g.getID());
+        GuildConfig config = SimpleBot.guilds.get(g.getID()).getConfig();
         String prefix = config.getPrefix();
         String message = m.getContent();
         if (!message.startsWith(prefix)) {
@@ -161,9 +164,17 @@ public class CommandListener {
                         sendAdminHelp(g, u, prefix);
                         return;
                     }
-
+                case "updatePlayerData":
+                    Guild guild = SimpleBot.guilds.get(config.getId());
+                    if(guild.isBungeeConnected()){
+                        Map<String, McUser> result = UserManager.getAllGuildUsers(guild.config.getId());
+                        UpdatePlayersMessage msg = new UpdatePlayersMessage(guild.config.getId());
+                        msg.setPlayers(result);
+                        guild.getClient().send(msg);
+                        return;
+                    }
                 case "reloadguildconfig":
-                    GuildConfig c = SimpleBot.gConfigs.get(m.getGuild().getID());
+                    GuildConfig c = SimpleBot.guilds.get(m.getGuild().getID()).getConfig();
                     c.loadConfig();
                     Utility.sendPrivateMessage(u, "Configurations reloaded");
                     return;

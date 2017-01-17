@@ -1,23 +1,30 @@
 package au.com.addstar.discord;
 
-/**
- * Created for use for the Add5tar MC Minecraft server
- * Created by benjamincharlton on 24/12/2016.
- */
+
 
         import com.google.common.io.ByteStreams;
         import java.io.File;
         import java.io.FileOutputStream;
         import java.io.IOException;
         import java.io.InputStream;
+        import java.util.logging.Logger;
+
+        import net.cubespace.geSuit.geSuit;
         import net.md_5.bungee.api.plugin.Plugin;
         import net.md_5.bungee.config.Configuration;
         import net.md_5.bungee.config.ConfigurationProvider;
         import net.md_5.bungee.config.YamlConfiguration;
+/**
+ * Created for use for the Add5tar MC Minecraft server
+ * Created by benjamincharlton on 24/12/2016.
+ **/
 
 public class DiscordBungee extends Plugin {
     public static DiscordBungee instance;
     public Configuration config;
+    public Logger log;
+    public boolean gHooked;
+    public geSuit gPlugin;
 
     public DiscordBungee() {
     }
@@ -30,6 +37,12 @@ public class DiscordBungee extends Plugin {
         super.onEnable();
         instance = this;
         this.loadConfig();
+        log = this.getProxy().getLogger();
+        Plugin p = this.getProxy().getPluginManager().getPlugin("geSuit");
+        if (p != null){
+            gPlugin = (geSuit) p;
+            gHooked = true;
+        }
     }
 
     public void onDisable() {
@@ -42,25 +55,25 @@ public class DiscordBungee extends Plugin {
             try {
                 configFile.createNewFile();
                 InputStream ex = this.getResourceAsStream("config.yml");
-                Throwable var3 = null;
+                Throwable se2 = null;
 
                 try {
                     FileOutputStream os = new FileOutputStream(configFile);
-                    Throwable var5 = null;
+                    Throwable se1 = null;
 
                     try {
                         ByteStreams.copy(ex, os);
                         this.getLogger().info("Config file created!");
-                    } catch (Throwable var33) {
-                        var5 = var33;
-                        throw var33;
+                    } catch (Throwable e1) {
+                        se1 = e1;
+                        throw e1;
                     } finally {
                         if(os != null) {
-                            if(var5 != null) {
+                            if(se1 != null) {
                                 try {
                                     os.close();
-                                } catch (Throwable var32) {
-                                    var5.addSuppressed(var32);
+                                } catch (Throwable e2) {
+                                    se1.addSuppressed(e2);
                                 }
                             } else {
                                 os.close();
@@ -68,16 +81,16 @@ public class DiscordBungee extends Plugin {
                         }
 
                     }
-                } catch (Throwable var35) {
-                    var3 = var35;
-                    throw var35;
+                } catch (Throwable e) {
+                    se2 = e;
+                    throw e;
                 } finally {
                     if(ex != null) {
-                        if(var3 != null) {
+                        if(se2 != null) {
                             try {
                                 ex.close();
-                            } catch (Throwable var31) {
-                                var3.addSuppressed(var31);
+                            } catch (Throwable e2) {
+                                se2.addSuppressed(e2);
                             }
                         } else {
                             ex.close();
@@ -85,15 +98,15 @@ public class DiscordBungee extends Plugin {
                     }
 
                 }
-            } catch (IOException var37) {
+            } catch (IOException e) {
                 this.getLogger().severe("Unable to create configuration file!");
             }
         }
 
         try {
             this.config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(configFile);
-        } catch (IOException var30) {
-            ;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }
@@ -101,8 +114,9 @@ public class DiscordBungee extends Plugin {
     private void saveConfig() {
         try {
             ConfigurationProvider.getProvider(YamlConfiguration.class).save(this.config, new File(this.getDataFolder(), "config.yml"));
-        } catch (IOException var2) {
+        } catch (IOException e) {
             this.getLogger().severe("Error while saving files!");
+            e.printStackTrace();
         }
 
     }

@@ -1,7 +1,5 @@
 package au.com.addstar.discord.objects;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;

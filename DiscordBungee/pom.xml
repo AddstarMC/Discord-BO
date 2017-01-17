@@ -17,7 +17,40 @@
             <groupId>net.md-5</groupId>
             <artifactId>bungeecord-api</artifactId>
             <version>1.11-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.cubespace</groupId>
+            <artifactId>geSuit</artifactId>
+            <version>0.8.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>au.com.addstar.discord</groupId>
+            <artifactId>discordCore</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
-
+    <build>
+        <plugins>
+            <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>1.4</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        </plugins>
+    </build>
+    <ciManagement>
+        <system>jenkins</system>
+        <url>http://jenkins.addstar.com.au</url>
+    </ciManagement>
 </project>
