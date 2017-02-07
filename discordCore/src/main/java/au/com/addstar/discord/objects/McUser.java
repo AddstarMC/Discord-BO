@@ -1,5 +1,7 @@
 package au.com.addstar.discord.objects;
 
+import java.io.Serializable;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -8,8 +10,9 @@ import java.util.UUID;
  * Created for use for the Add5tar MC Minecraft server
  * Created by benjamincharlton on 18/12/2016.
  */
-public class McUser {
+public class McUser implements Serializable {
 
+    private static final long serialVersionUID = -3606891793023513622L;
     private final String discordID;
     private UUID minecraftUUID;
     private Map<String, String> displayNames;
@@ -18,6 +21,7 @@ public class McUser {
     public String getDiscordID() {
         return discordID;
     }
+
     public McUser(String discordID) {
         this.discordID = discordID;
         displayNames = new HashMap<>();
@@ -35,25 +39,28 @@ public class McUser {
         this.minecraftUUID = minecraftUUID;
     }
 
-    public void addUpdateDisplayName(String guildID, String name){
-        displayNames.put(guildID,name);
+    public void addUpdateDisplayName(String guildID, String name) {
+        displayNames.put(guildID, name);
     }
 
-    public String getDisplayName(String guildId){
+    public String getDisplayName(String guildId) {
         return displayNames.get(guildId);
     }
 
-    public Map<String, String> getDisplayNames(){
+    public Map<String, String> getDisplayNames() {
         return displayNames;
     }
 
-    public void storeDetail(String name, String value){
+    public void storeDetail(String name, String value) {
         detail.put(name, value);
     }
 
-    public String getDetail(String name){
+    public String getDetail(String name) {
         return detail.get(name);
     }
 
-
+    public Map<String, String> getDetail() {
+        return detail;
+    }
 }
+

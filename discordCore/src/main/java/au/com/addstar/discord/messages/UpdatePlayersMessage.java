@@ -6,12 +6,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class UpdatePlayersMessage extends AbstractMessage {
+public class UpdatePlayersMessage extends AbstractCommandMessage {
 
+    private static final long serialVersionUID = -3202570780981339073L;
     private Map<String, McUser> players;
 
-    public UpdatePlayersMessage(String serverID){
-        super("UpdatePlayers",serverID);
+
+    public UpdatePlayersMessage(String serverID, long id){
+        super(CommandType.UpdatePlayer,serverID, id);
         players = new HashMap<>();
     }
 
@@ -42,4 +44,5 @@ public class UpdatePlayersMessage extends AbstractMessage {
     public void setPlayers(Map<String, McUser> players) {
         this.players = players;
     }
+
 }

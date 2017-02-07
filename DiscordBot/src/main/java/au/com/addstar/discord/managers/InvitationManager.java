@@ -3,6 +3,7 @@ package au.com.addstar.discord.managers;
 import au.com.addstar.discord.SimpleBot;
 import au.com.addstar.discord.objects.GuildConfig;
 import au.com.addstar.discord.objects.Invitation;
+import au.com.addstar.discord.objects.McUser;
 import au.com.addstar.discord.ulilities.Utility;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -25,7 +26,6 @@ import java.util.UUID;
  * Created by benjamincharlton on 18/12/2016.
  */
 public class InvitationManager {
-
 
     public static void saveInvites(GuildConfig config) {
         SimpleBot.log.info("Saving Invitations to file");
@@ -51,7 +51,6 @@ public class InvitationManager {
         SimpleBot.log.info("Save Completed...");
     }
     public static void loadInvites(GuildConfig config){
-
         int size = (config.getInviteCache()!= null)?config.getInviteCache().size():0;
         SimpleBot.log.info("Loading Invitations from file (Current:" +size +")");
         Gson gsondecoder = new Gson();
@@ -90,23 +89,21 @@ public class InvitationManager {
     }
 
     public static Invitation storeInvitation(GuildConfig config, Invitation value){
-        Map<String, Invitation> icache = config.getInviteCache();
-        synchronized (icache) {
-            if (!icache.containsKey(value.getInviteCode())) {
-                return icache.put(value.getInviteCode(), value);
+        synchronized (config.getInviteCache()) {
+            if (!config.getInviteCache().containsKey(value.getInviteCode())) {
+                return config.getInviteCache().put(value.getInviteCode(), value);
             } else {
                 SimpleBot.log.error("Key was already cached : " + value.getInviteCode());
             }
         }
         saveInvites(config);
-        return icache.get(value.getInviteCode());
+        return config.getInviteCache().get(value.getInviteCode());
     }
 
     public static void removeInvitation(GuildConfig config, String code){
-        Map<String, Invitation> icache = config.getInviteCache();
-        synchronized (icache) {
-            if (icache.containsKey(code)) {
-                icache.remove(code);
+        synchronized (config.getInviteCache()) {
+            if (config.getInviteCache().containsKey(code)) {
+                config.getInviteCache().remove(code);
             } else {
                 SimpleBot.log.error("Key was not found in invite cache : " + code);
             }

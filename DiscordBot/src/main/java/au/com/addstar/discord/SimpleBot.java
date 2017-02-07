@@ -7,7 +7,6 @@ import au.com.addstar.discord.listeners.CommandListener;
 import au.com.addstar.discord.listeners.ManagementListener;
 import au.com.addstar.discord.objects.Guild;
 import au.com.addstar.discord.objects.GuildConfig;
-import au.com.addstar.discord.socketClient.BungeeComClient;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

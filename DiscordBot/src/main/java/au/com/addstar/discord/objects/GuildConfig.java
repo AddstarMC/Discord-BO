@@ -20,8 +20,9 @@ public class GuildConfig {
         private String modChannelID;
         private Boolean reportStatusChange;
         private Integer expiryTime; //expiry time in seconds
-        private String guildMcHost;
-        private Integer guildPort;
+        private String redisHost;
+        private Integer redisPort;
+        private String redisPassword;
         private Map<String, Invitation> inviteCache;
 
         public GuildConfig(String id){
@@ -33,8 +34,9 @@ public class GuildConfig {
                 reportStatusChange = false;
                 inviteCache =  new HashMap<>();
                 expiryTime = 7200;
-                guildMcHost = null;
-                guildPort = null;
+                redisHost = null;
+                redisPort = null;
+                redisPassword = null;
                 loadConfig();
         }
 
@@ -99,20 +101,24 @@ public class GuildConfig {
         }
 
 
-        public String getGuildMcHost() {
-                return guildMcHost;
+        public String getRedisHost() {
+                return redisHost;
         }
 
-        public void setGuildMcHost(String guildMcHost) {
-                this.guildMcHost = guildMcHost;
+        public void setRedisHost(String redisHost) {
+                this.redisHost = redisHost;
         }
 
-        public Integer getGuildPort() {
-                return guildPort;
+        public Integer getRedisPort() {
+                return redisPort;
         }
 
-        public void setGuildPort(int guildPort) {
-                this.guildPort = guildPort;
+        public void setRedisPort(int redisPort) {
+                this.redisPort = redisPort;
+        }
+
+        public String getRedisPassword() {
+                return redisPassword;
         }
 
         public void loadConfig(){
@@ -155,11 +161,12 @@ public class GuildConfig {
                 modChannelID = prop.getProperty("modChannelID","");
                 reportStatusChange = Boolean.getBoolean(prop.getProperty("reportStatusChange", Boolean.toString(false)));
                 expiryTime = Integer.parseInt(prop.getProperty("expiryTime", "7200"));
-                guildMcHost = prop.getProperty("guildMcHost",null);
+                redisHost = prop.getProperty("redisHost",null);
+                redisPassword = prop.getProperty("redisPassword",null);
                 try{
-                        guildPort = Integer.parseInt(prop.getProperty("guildPort",null));
+                        redisPort = Integer.parseInt(prop.getProperty("redisPort",null));
                 }catch (NumberFormatException e){
-                        guildPort = null;
+                        redisPort = null;
                 }
                 InvitationManager.loadInvites(this);
         }
@@ -202,9 +209,9 @@ public class GuildConfig {
                         prop.getProperty("modChannelID").equals(modChannelID) &&
                         prop.getProperty("reportStatusChange").equals(reportStatusChange.toString()) &&
                         prop.getProperty("expiryTime").equals(expiryTime.toString()) &&
-                        Objects.equals(prop.getProperty("guildMcHost"),guildMcHost)  &&
-                        ((prop.getProperty("guildPort") == null && guildPort == null) ||
-                                Integer.parseInt(prop.getProperty("guildPort"))==guildPort)
+                        Objects.equals(prop.getProperty("redisHost"),redisHost)  &&
+                        ((prop.getProperty("redisPort") == null && redisPort == null) ||
+                                Integer.parseInt(prop.getProperty("redisPort"))==redisPort)
                 );
         }
 
@@ -216,16 +223,10 @@ public class GuildConfig {
                 prop.setProperty("modChannelID",modChannelID);
                 prop.setProperty("reportStatusChange",reportStatusChange.toString());
                 prop.setProperty("expiryTime",expiryTime.toString());
-                if(guildMcHost != null)prop.setProperty("guildMcHost",guildMcHost);
-                if(guildPort != null)prop.setProperty("guildPort",guildPort.toString());
+                if(redisHost != null)prop.setProperty("redisHost",redisHost);
+                if(redisPassword != null)prop.setProperty("redisPassword",redisPassword);
+                if(redisPort != null)prop.setProperty("redisPort",redisPort.toString());
                 return prop;
         }
-
-
-
-
-
-
-
 
 }

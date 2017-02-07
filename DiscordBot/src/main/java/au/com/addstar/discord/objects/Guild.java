@@ -1,6 +1,6 @@
 package au.com.addstar.discord.objects;
 
-import au.com.addstar.discord.socketClient.BungeeComClient;
+import au.com.addstar.discord.redis.RedisManager;
 
 /**
  * Created for the Ark: Survival Evolved.
@@ -11,21 +11,15 @@ public class Guild {
 
     public GuildConfig config;
     private boolean bungeeConnected;
-    public BungeeComClient client;
+    public RedisManager redisManager;
 
 
     public Guild(GuildConfig config) {
         this.config = config;
         bungeeConnected = false;
-        if (config.getGuildMcHost() != null && config.getGuildPort() != null){
-            try {
-                client = new BungeeComClient(config.getGuildMcHost(), config.getGuildPort());
-                bungeeConnected = true;
-            }catch (Exception e){
-                e.printStackTrace();
-                bungeeConnected = false;
-            }
-        }
+        redisManager = new RedisManager(config.getId());
+        redisManager.initialize(config.getRedisHost(),config.getRedisPort(),config.getRedisPassword());
+        if(redisManager.ping())bungeeConnected=true;
     }
 
     public GuildConfig getConfig() {
@@ -36,8 +30,10 @@ public class Guild {
         return bungeeConnected;
     }
 
-    public BungeeComClient getClient() {
-        return client;
+    public RedisManager getRedis(){
+        return redisManager;
     }
+
+
 }
 

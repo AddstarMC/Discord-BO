@@ -1,14 +1,18 @@
 package au.com.addstar.discord.listeners;
 
+import au.com.addstar.discord.managers.FunctionManager;
 import au.com.addstar.discord.SimpleBot;
 import au.com.addstar.discord.managers.InvitationManager;
 import au.com.addstar.discord.managers.UserManager;
+import au.com.addstar.discord.messages.ResponseMessage;
 import au.com.addstar.discord.messages.UpdatePlayersMessage;
 import au.com.addstar.discord.objects.Guild;
 import au.com.addstar.discord.objects.GuildConfig;
 import au.com.addstar.discord.objects.Invitation;
 import au.com.addstar.discord.objects.McUser;
 import au.com.addstar.discord.ulilities.Utility;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
@@ -18,6 +22,7 @@ import sx.blah.discord.util.MessageList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+
 
 import static au.com.addstar.discord.ulilities.MessageFormatter.addStyle;
 import static au.com.addstar.discord.ulilities.Utility.deleteMessage;
@@ -166,13 +171,17 @@ public class CommandListener {
                     }
                 case "updatePlayerData":
                     Guild guild = SimpleBot.guilds.get(config.getId());
-                    if(guild.isBungeeConnected()){
+                    if(guild.isBungeeConnected()) {
                         Map<String, McUser> result = UserManager.getAllGuildUsers(guild.config.getId());
-                        UpdatePlayersMessage msg = new UpdatePlayersMessage(guild.config.getId());
+                        UpdatePlayersMessage msg = new UpdatePlayersMessage(guild.config.getId(), guild.getRedis().getNextCommandId());
                         msg.setPlayers(result);
-                        guild.getClient().send(msg);
-                        return;
+                        ListenableFuture<ResponseMessage> future = guild.getRedis().sendCommand(guild.config.getId(), msg);
+                        Futures.transform(future, FunctionManager.UpdatePlayerFunction(guild));
+                    }else{
+                        Utility.sendPrivateMessage(u,"No Bungee Instance available");
+
                     }
+                    return;
                 case "reloadguildconfig":
                     GuildConfig c = SimpleBot.guilds.get(m.getGuild().getID()).getConfig();
                     c.loadConfig();

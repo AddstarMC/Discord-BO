@@ -8,14 +8,17 @@ import java.io.Serializable;
  */
 public interface IMessage extends Serializable {
 
+
     /**
      * Should return the message type
+     *
      * @return String
      */
-    String getMessageType();
+    MessageType getMessageType();
 
-    void setMessageType(String type);
+    void setMessageType(MessageType type);
 
     String getServerID();
 
+    long getMessageId();
 }
