@@ -19,7 +19,7 @@
             <dependency>
             <groupId>com.github.austinv11</groupId>
             <artifactId>Discord4J</artifactId>
-            <version>f6f90c4b9e7ecd853fdb65baf910e49c1e9a935d</version>
+            <version>2.7.0</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
