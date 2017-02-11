@@ -1,8 +1,10 @@
 package au.com.addstar.discord;
 
+        import au.com.addstar.discord.messages.identifiers.CommandType;
         import au.com.addstar.discord.redis.RedisManager;
         import au.com.addstar.bc.BungeeChat;
 
+        import au.com.addstar.discord.redisHandlers.UpdatePlayerCommandHandler;
         import com.google.common.io.ByteStreams;
         import java.io.File;
         import java.io.FileOutputStream;
@@ -25,7 +27,8 @@ public class DiscordBungee extends Plugin {
     public Configuration config ;
     public Logger log;
     public boolean gHooked;
-    public geSuit gPlugin;
+    private boolean redisEnabled;
+    private geSuit gPlugin;
     public BungeeChat bcplugin;
 //    DiscordComServer server;
 
@@ -34,10 +37,7 @@ public class DiscordBungee extends Plugin {
     public DiscordBungee() {
     }
 
-    public void onLoad() {
-        super.onLoad();
-    }
-
+    @Override
     public void onEnable() {
         super.onEnable();
         instance = this;
@@ -52,14 +52,21 @@ public class DiscordBungee extends Plugin {
         if (p != null){
             bcplugin = (BungeeChat) p;
         }
-        redisManager = new RedisManager(getProxy().getName());
-        redisManager.initialize(config.getString("redisHost", "localhost"),config.getInt("redisPort",6379),config.getString("redisPassword"));
+        ILog iLog  = new BungeeLog(log);
+        redisManager = new RedisManager(config.get("bungeeId",null),config.getString("discordId",null),iLog);
+        redisEnabled = redisManager.initialize(config.getString("redisHost", "localhost"),config.getInt("redisPort",6379),config.getString("redisPassword"));
+        if(redisEnabled){
+            redisManager.registerCommandHandler(new UpdatePlayerCommandHandler(this), CommandType.UpdatePlayer);
+        }else {
+            log.info("Redis could not be configured please check you logs and configuration options");
+        }
+
 
     }
-
+    @Override
     public void onDisable() {
-        //server.closeConnection();
         super.onDisable();
+        if (redisEnabled)redisManager.terminate();
     }
 
     void loadConfig(File path, String fileName) {

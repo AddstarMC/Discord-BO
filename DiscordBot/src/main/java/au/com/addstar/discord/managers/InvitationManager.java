@@ -3,7 +3,6 @@ package au.com.addstar.discord.managers;
 import au.com.addstar.discord.SimpleBot;
 import au.com.addstar.discord.objects.GuildConfig;
 import au.com.addstar.discord.objects.Invitation;
-import au.com.addstar.discord.objects.McUser;
 import au.com.addstar.discord.ulilities.Utility;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -155,7 +154,7 @@ public class InvitationManager {
 
         return createInvite(chan, age, maxUses, true,true);
     }
-    public static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp, boolean unique){
+    private static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp, boolean unique){
         IInvite invite = null;
         try {
             invite = chan.createInvite(age, maxUses, temp, unique);

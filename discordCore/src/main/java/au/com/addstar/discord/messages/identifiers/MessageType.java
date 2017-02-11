@@ -1,4 +1,4 @@
-package au.com.addstar.discord.messages;
+package au.com.addstar.discord.messages.identifiers;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -8,3 +8,5 @@ public enum MessageType {
     Command,
     Response
 }
+
+

@@ -1,7 +1,6 @@
 package au.com.addstar.discord.objects;
 
 import java.io.Serializable;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -59,7 +58,7 @@ public class McUser implements Serializable {
         return detail.get(name);
     }
 
-    public Map<String, String> getDetail() {
+    public Map<String, String> getDetails() {
         return detail;
     }
 }

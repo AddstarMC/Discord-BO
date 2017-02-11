@@ -1,6 +1,10 @@
 package au.com.addstar.discord.redis;
 
+import au.com.addstar.discord.ILog;
 import au.com.addstar.discord.messages.*;
+import au.com.addstar.discord.messages.identifiers.CommandType;
+import au.com.addstar.discord.messages.identifiers.MessageStatus;
+import au.com.addstar.discord.messages.identifiers.MessageType;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
@@ -19,21 +23,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static au.com.addstar.discord.messages.ResponseMessage.ResponseTypes.FAIL;
-import static au.com.addstar.discord.messages.ResponseMessage.ResponseTypes.OK;
+import static au.com.addstar.discord.messages.identifiers.MessageStatus.OK;
 
 /**
  * Created for the AddstarMC Server Network
  * Created by Narimm on 1/02/2017.
  */
 public class RedisManager {
-    public final static String REDISKEY = "dBot";
+    private final static String REDISKEY = "dBot";
+    private final String receiverId;
     private RedisClient client;
-    private static String serverID = null;
-    private RedisPubSubAsyncCommands<String, IMessage> subscribeConnection;
-    private RedisPubSubCommands<String, IMessage> publishConnection;
-    private ChannelHandler handler;
-    private Map<CommandType, IncomingCommandHandler> commandHandlers;
+    private final String senderId;
+    private final ILog log;
+    private RedisPubSubAsyncCommands<String, AMessage> subscribeConnection;
+    private RedisPubSubCommands<String, AMessage> publishConnection;
+    private final ChannelHandler handler;
+    private final Map<CommandType, IncomingCommandHandler> commandHandlers;
     private final ListMultimap<String, WaitFuture> waitingFutures;
 
     public long getNextCommandId() {
@@ -42,48 +47,67 @@ public class RedisManager {
 
     private long nextCommandId;
 
-    public RedisManager(String id) {
-        serverID = id;
+    public RedisManager(String myId, String rId, ILog logwrapper) {
+        senderId = myId;
+        this.receiverId = rId;
+        this.log = logwrapper;
         this.handler = new ChannelHandler();
         waitingFutures = ArrayListMultimap.create();
         nextCommandId = 0;
         commandHandlers = Maps.newHashMap();
     }
 
-    public void initialize(String host, int port, String password){
+    public boolean initialize(String host, int port, String password){
+        if(senderId == null || receiverId == null){
+            //With no sender and reciever ID this cant work so no point configuring
+            return false;
+        }
         RedisURI uri = new RedisURI(host,port,30, TimeUnit.SECONDS);
         if(password != null || password.length()>0)uri.setPassword(password);
         client = RedisClient.create(uri);
-        RedisCodec<String, IMessage> codec = new IMessageObjectCodec();
-        StatefulRedisPubSubConnection<String, IMessage> connection = client.connectPubSub(codec);
+        RedisCodec<String, AMessage> codec = new IMessageObjectCodec();
+        StatefulRedisPubSubConnection<String, AMessage> connection = client.connectPubSub(codec);
         subscribeConnection = connection.async();
         subscribeConnection.addListener(handler);
-        subscribeConnection.psubscribe(REDISKEY + "." + serverID);
+        subscribeConnection.psubscribe(REDISKEY + "." + receiverId);
         connection = client.connectPubSub(codec);
         publishConnection = connection.sync();
-
+        return true;
     }
 
-    public static String getServerID() {
-        return serverID;
+    public void terminate(){
+        subscribeConnection.punsubscribe(REDISKEY + "." + receiverId);
+        subscribeConnection.removeListener(handler);
+        subscribeConnection.close();
+        publishConnection.close();
+        client.shutdown();
+        client = null;
+    }
+
+    public String getSenderId() {
+        return senderId;
+    }
+
+    public String getReceiverId() {
+        return receiverId;
     }
 
     public void registerCommandHandler(IncomingCommandHandler handler, CommandType type) {
             commandHandlers.put(type, handler);
     }
 
-    private void send(String targetId, IMessage message) {
-        publishConnection.publish(String.format("%s.%s>%s", REDISKEY, serverID, targetId), message);
+    private void send(String targetId, AMessage message) {
+        publishConnection.publish(String.format("%s.%s>%s", REDISKEY, senderId, targetId), message);
     }
 
-    public ListenableFuture<ResponseMessage> sendCommand(String serverId, IMessage message) {
+    public ListenableFuture<AMessage> sendCommand(String targetId, AMessage message) {
 
         // Send it
         WaitFuture future = new WaitFuture(message.getMessageId());
         synchronized (waitingFutures) {
-            waitingFutures.put(serverId, future);
+            waitingFutures.put(targetId, future);
         }
-        send(serverId, message);
+        send(targetId, message);
         return future;
     }
 
@@ -92,18 +116,20 @@ public class RedisManager {
         return result!=null;
     }
 
+    public ILog getLog() {
+        return log;
+    }
 
-    private void handleCommand(String serverId, long commandID, IMessage message) {
+
+    private void handleCommand(String serverId, long commandID, AMessage message) {
         IncomingCommandHandler handler = null;
         if(message.getMessageType() == MessageType.Command){
-            AbstractCommandMessage commandMessage = (AbstractCommandMessage) message;
+            AbstractMessage commandMessage = (AbstractMessage) message;
              handler = commandHandlers.get(commandMessage.getCommandType());
         }
-        ResponseMessage response;
+        AMessage response;
         if (handler == null) {
-            response =  new ResponseMessage(serverId,commandID);
-            response.setResponse(FAIL);
-            response.setError("No handler found for " + message.getMessageType());
+            response =  new ResponseMessage(message.getCommandType(),serverId,commandID, MessageStatus.FAIL,"No Handlers Found");
         } else {
             response = handler.onCommand(message);
         }
@@ -111,16 +137,58 @@ public class RedisManager {
         send(serverId, response);
     }
 
-    private class ChannelHandler implements RedisPubSubListener<String, IMessage> {
+    private void handleReply(String fromId, long messageId, AMessage response) {
+        synchronized (waitingFutures) {
+            List<WaitFuture> futures = waitingFutures.get(fromId);
+
+            // Find and handle the correct future
+            for (WaitFuture future : futures) {
+                if (future.getMessageId() == messageId) {
+                    // All done
+                    if (response.getStatus() == OK) {
+                        future.set(response);
+                    } else {
+                        future.setException(new CommandException(response.getMessage()));
+                    }
+
+                    futures.remove(future);
+                    break;
+                }
+            }
+
+            // Remove expired futures
+            timeoutOldQueries();
+        }
+    }
+
+    /**
+     * Times out all old queries
+     */
+    private void timeoutOldQueries() {
+        synchronized (waitingFutures) {
+            Iterator<WaitFuture> it = waitingFutures.values().iterator();
+            while (it.hasNext()) {
+                WaitFuture future = it.next();
+                if (future.isOld()) {
+                    future.setException(new CommandException("Timeout"));
+                    it.remove();
+                }
+            }
+        }
+    }
+
+
+
+    private class ChannelHandler implements RedisPubSubListener<String, AMessage> {
 
 
         @Override
-        public void message(String channel, IMessage message) {
+        public void message(String channel, AMessage message) {
 
         }
 
         @Override
-        public void message(String pattern, String channel, IMessage message) {
+        public void message(String pattern, String channel, AMessage message) {
             String sourceId;
             if (pattern.startsWith(REDISKEY)) {
                 // Server to server communication
@@ -130,13 +198,18 @@ public class RedisManager {
             } else {
                 return;
             }
-            if (sourceId.equals(serverID)){
+            if (sourceId.equals(senderId)){
                 return;
             }
-            if(!message.getMessageType().equals("Response")) {
+            if(!(message.getMessageType() == MessageType.Response)) {
+                if(sourceId !=  receiverId){
+                    log.info("Command Message recieved from :"+sourceId+".");
+                    log.info("This RedisManager only handles commands from a source ID= " + receiverId);
+                    return;
+                }
                 handleCommand(sourceId, message.getMessageId(), message);
             }else{
-                handleReply(sourceId,message.getMessageId(),(ResponseMessage)message);
+                handleReply(sourceId,message.getMessageId(), message);
             }
 
         }
@@ -162,47 +235,7 @@ public class RedisManager {
         }
     }
 
-    private void handleReply(String serverId, long queryId, ResponseMessage response) {
-        synchronized (waitingFutures) {
-            List<WaitFuture> futures = waitingFutures.get(serverId);
-
-            // Find and handle the correct future
-            for (WaitFuture future : futures) {
-                if (future.getQueryId() == queryId) {
-                    // All done
-                    if (response.getResponse() == OK) {
-                        future.set(response);
-                    } else {
-                        future.setException(new CommandException(response.getErrorMessage()));
-                    }
-
-                    futures.remove(future);
-                    break;
-                }
-            }
-
-            // Remove expired futures
-            timeoutOldQueries();
-        }
-    }
-
-    /**
-     * Times out all old queries
-     */
-    public void timeoutOldQueries() {
-        synchronized (waitingFutures) {
-            Iterator<WaitFuture> it = waitingFutures.values().iterator();
-            while (it.hasNext()) {
-                WaitFuture future = it.next();
-                if (future.isOld()) {
-                    future.setException(new CommandException("Timeout"));
-                    it.remove();
-                }
-            }
-        }
-    }
-
-    private static class WaitFuture extends AbstractFuture<ResponseMessage> {
+    private static class WaitFuture extends AbstractFuture<AMessage> {
         private final long commandID;
         private final long initializeTime;
 
@@ -211,7 +244,7 @@ public class RedisManager {
             initializeTime = System.currentTimeMillis();
         }
 
-        public long getQueryId() {
+        public long getMessageId() {
             return commandID;
         }
 
@@ -224,7 +257,7 @@ public class RedisManager {
         }
 
         @Override
-        public boolean set(ResponseMessage value) {
+        public boolean set(AMessage value) {
             return super.set(value);
         }
 

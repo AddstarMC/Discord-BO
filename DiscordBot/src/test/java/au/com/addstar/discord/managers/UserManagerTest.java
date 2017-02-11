@@ -39,10 +39,10 @@ public class UserManagerTest {
         assertEquals(mUser.getDisplayName(guild.getID()), "TestUser4");
     }
 
-    private IGuild guild;
+     private IGuild guild;
      private IUser user;
      private List<IUser> iUsers;
-     private List<IGuild> guilds = new ArrayList<IGuild>();
+     private final List<IGuild> guilds = new ArrayList<>();
      private IDiscordClient client;
 
     @Test
@@ -50,16 +50,6 @@ public class UserManagerTest {
         McUser testUser = new McUser(user.getID());
         UserManager.addGuildtoUser(testUser,"TesterUser",guild);
         assertTrue(Objects.equals(testUser.getDisplayName(guild.getID()), "TesterUser"));
-    }
-
-    @Test
-    public void cacheUserTest() throws Exception {
-
-    }
-
-    @Test
-    public void removeUserTest() throws Exception {
-
     }
 
     @Test
@@ -89,7 +79,7 @@ public class UserManagerTest {
         client = mock(IDiscordClient.class);
         when(client.getGuilds()).thenReturn(guilds);
         user=mock(IUser.class);
-        iUsers = new ArrayList<IUser>();
+        iUsers = new ArrayList<>();
         guild= mock(IGuild.class);
         iUsers.add(user);
         guilds.add(guild);

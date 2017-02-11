@@ -1,7 +1,6 @@
 package au.com.addstar.discord.redis;
 
-import au.com.addstar.discord.messages.IMessage;
-import au.com.addstar.discord.messages.ResponseMessage;
+import au.com.addstar.discord.messages.AMessage;
 
 /**
  * Created for the AddstarMC Project.
@@ -9,6 +8,6 @@ import au.com.addstar.discord.messages.ResponseMessage;
  */
 public interface IncomingCommandHandler {
 
-    ResponseMessage onCommand(IMessage message);
+    AMessage onCommand(AMessage message);
 
 }

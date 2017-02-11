@@ -5,36 +5,19 @@
     <parent>
         <artifactId>DiscordModules</artifactId>
         <groupId>au.com.addstar.discord</groupId>
-        <version>0.1-SNAPSHOT</version>
+        <version>0.2-SNAPSHOT</version>
     </parent>
+
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>discordCore</artifactId>
+    <packaging>jar</packaging>
+    <description>A Library Jar for the bot and plugin</description>
     <dependencies>
-    <dependency>
-        <groupId>biz.paluch.redis</groupId>
-        <artifactId>lettuce</artifactId>
-        <version>4.1.Final</version>
-    </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <version>15.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>1.8.5</version>
-            <scope>compile</scope>
+                <groupId>biz.paluch.redis</groupId>
+                <artifactId>lettuce</artifactId>
+                <version>4.1.Final</version>
         </dependency>
     </dependencies>
-
-
 </project>

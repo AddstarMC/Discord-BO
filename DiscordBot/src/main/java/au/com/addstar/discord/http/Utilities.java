@@ -29,7 +29,7 @@ class Utilities {
         doResponse(t,responseCode,contentType,response);
     }
 
-    static void doResponse(HttpExchange t, int responseCode, List<String> contentType, String response) throws IOException {
+    private static void doResponse(HttpExchange t, int responseCode, List<String> contentType, String response) throws IOException {
         if (contentType.size() > 0){
             t.getResponseHeaders().put(HttpHeaders.CONTENT_TYPE, contentType);
         }

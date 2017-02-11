@@ -1,20 +1,12 @@
 package au.com.addstar.discord;
 
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.plugin.Plugin;
-import net.md_5.bungee.api.plugin.PluginManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.mockito.Mockito.mock;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
 
 /**
  * Created for the AddstarMC Project.

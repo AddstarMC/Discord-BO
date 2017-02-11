@@ -1,7 +1,6 @@
 package au.com.addstar.discord.managers;
 
 import au.com.addstar.discord.SimpleBot;
-import au.com.addstar.discord.objects.Guild;
 import au.com.addstar.discord.objects.McUser;
 
 import com.google.gson.Gson;
@@ -27,9 +26,9 @@ import java.util.Map;
  */
 public class UserManager {
 
-    private static Map<String, McUser> userCache = new HashMap<>();
-    private static Gson gsonencoder = new Gson();
-    private static Type type = new TypeToken<McUser>(){}.getType();
+    private static final Map<String, McUser> userCache = new HashMap<>();
+    private static final Gson gsonencoder = new Gson();
+    private static final Type type = new TypeToken<McUser>(){}.getType();
 
     public static void initialize(IDiscordClient client){
         List<IGuild> guilds = client.getGuilds();
@@ -122,7 +121,7 @@ public class UserManager {
 
 
     }
-    public static void saveUserToFile(McUser u) {
+    private static void saveUserToFile(McUser u) {
         SimpleBot.log.info("Transferring User to disk: " + u.getDiscordID());
         File parent = new File("users");
         if (!parent.exists()) {

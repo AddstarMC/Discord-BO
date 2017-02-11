@@ -7,10 +7,10 @@ import java.util.logging.Logger;
  * Created for the Ark: Survival Evolved.
  * Created by Narimm on 21/01/2017.
  */
-public class Helper {
+class Helper {
 
 
-    public static DiscordBungee createPlugin(){
+    static DiscordBungee createPlugin(){
         DiscordBungee plugin =  new DiscordBungee();
         plugin.instance = plugin;
         plugin.log = Logger.getAnonymousLogger();

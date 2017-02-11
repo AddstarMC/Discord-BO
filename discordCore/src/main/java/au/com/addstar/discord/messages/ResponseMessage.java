@@ -1,43 +1,41 @@
 package au.com.addstar.discord.messages;
 
+import au.com.addstar.discord.messages.identifiers.CommandType;
+import au.com.addstar.discord.messages.identifiers.MessageStatus;
+import au.com.addstar.discord.messages.identifiers.MessageType;
+
 /**
+ *
  * Created for the AddstarMC Project.
  * Created by Narimm on 2/02/2017.
  */
-public class ResponseMessage implements IMessage {
+public class ResponseMessage extends AbstractMessage {
 
     private static final long serialVersionUID = -4700433038445137309L;
 
-    private long messageId;
-    private String senderID;
-    private CommandType type;
-    private String error;
-
+    /**
+     * Generic Response that can be used to signal a failure or simple response.
+     *
+     * @param sender the server ID
+     * @param id the message ID
+     */
     public ResponseMessage(String sender, long id) {
-        senderID = sender;
-        messageId = id;
-        code = ResponseTypes.OK;
-        error = null;
-    }
-    public ResponseMessage(String sender, long id,ResponseTypes type, String error) {
-        senderID = sender;
-        messageId = id;
-        code = type;
-        this.error = error;
+        this(null, sender, id, MessageStatus.FAIL, "Unknown Error");
     }
 
-
-    public void setResponse(ResponseTypes rtype){
-        code = rtype;
-    }
-
-    public ResponseTypes getResponse(){
-        return code;
-    }
-
-    @Override
-    public MessageType getMessageType() {
-        return  MessageType.Response;
+    /**
+     * A detailed response that could be used for many endpoints.
+     *
+     * @param command the CommandType
+     * @param senderID the server ID
+     * @param id the message ID (usually set to the incoming Message ID
+     * @param status the status ie OK or FAIL
+     * @param message a simple message to return to the commander.
+     */
+    public ResponseMessage(CommandType command, String senderID, long id, MessageStatus status, String message) {
+        super(command, MessageType.Response, senderID, id);
+        setStatus(status);
+        setMessage(message);
     }
 
     @Override
@@ -45,35 +43,5 @@ public class ResponseMessage implements IMessage {
         throw new UnsupportedOperationException("Cannot set Message type on Response");
     }
 
-    @Override
-    public String getServerID() {
-        return senderID;
-    }
-
-    @Override
-    public long getMessageId() {
-        return messageId;
-    }
-
-    public enum ResponseTypes{
-        OK,
-        FAIL,
-    }
-
-    public String getErrorMessage(){
-        return error;
-    }
-
-    public void setError(String error) {
-        this.error = error;
-    }
-    private ResponseTypes code;
-
-    public CommandType getType() {
-        return type;
-    }
-
-    public void setType(CommandType type) {
-        this.type = type;
-    }
 }
+

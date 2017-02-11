@@ -43,6 +43,34 @@
         <build.number/>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <repositories>
+        <repository> <!-- This repo fixes issues with transitive dependencies -->
+            <id>jcenter</id>
+            <url>http://jcenter.bintray.com</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>mavencentral</id>
+            <url>http://repo2.maven.org/maven2</url>
+        </repository>
+            <repository>
+                <snapshots>
+                    <enabled>false</enabled>
+                </snapshots>
+                <id>addstar-release</id>
+                <name>release</name>
+                <url>http://maven.addstar.com.au/artifactory/release</url>
+            </repository>
+            <repository>
+                <snapshots />
+                <id>snapshots</id>
+                <name>addstar-snapshots</name>
+                <url>http://maven.addstar.com.au/artifactory/snapshots</url>
+            </repository>
+    </repositories>
     <build>
         <plugins>
             <plugin>
@@ -59,6 +87,9 @@
                     <workingDirectory>${java.io.tmpdir}</workingDirectory>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
@@ -66,7 +97,7 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
-            <scope>compile</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>
@@ -78,19 +109,11 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>1.8.5</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>biz.paluch.redis</groupId>
-            <artifactId>lettuce</artifactId>
-            <version>4.1.Final</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
-
+    <ciManagement>
+        <system>jenkins</system>
+        <url>http://jenkins.addstar.com.au</url>
+    </ciManagement>
 </project>

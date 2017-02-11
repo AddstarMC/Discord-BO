@@ -1,7 +1,6 @@
 package au.com.addstar.discord.objects;
 
 import au.com.addstar.discord.managers.InvitationManager;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -105,6 +104,7 @@ public class GuildConfigTest {
             if (!outFile.delete()) {
                 try {
                     throw new IOException("Could not delete file") {
+                        private static final long serialVersionUID = 3125554861469057912L;
                     };
                 } catch (IOException e) {
                     System.err.print(e.getLocalizedMessage());
@@ -140,6 +140,7 @@ public class GuildConfigTest {
             if (!inviteFile.delete()) {
                 try {
                     throw new IOException("Could not delete file") {
+                        private static final long serialVersionUID = -2216734694353523847L;
                     };
                 } catch (IOException e) {
                     System.err.print(e.getLocalizedMessage());

@@ -4,7 +4,7 @@ import au.com.addstar.discord.managers.FunctionManager;
 import au.com.addstar.discord.SimpleBot;
 import au.com.addstar.discord.managers.InvitationManager;
 import au.com.addstar.discord.managers.UserManager;
-import au.com.addstar.discord.messages.ResponseMessage;
+import au.com.addstar.discord.messages.AMessage;
 import au.com.addstar.discord.messages.UpdatePlayersMessage;
 import au.com.addstar.discord.objects.Guild;
 import au.com.addstar.discord.objects.GuildConfig;
@@ -15,7 +15,12 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.*;
+import sx.blah.discord.handle.obj.IChannel;
+import sx.blah.discord.handle.obj.IGuild;
+import sx.blah.discord.handle.obj.IMessage;
+import sx.blah.discord.handle.obj.IRole;
+import sx.blah.discord.handle.obj.IUser;
+import sx.blah.discord.handle.obj.Permissions;
 import sx.blah.discord.util.MessageBuilder.Styles;
 import sx.blah.discord.util.MessageList;
 
@@ -175,8 +180,8 @@ public class CommandListener {
                         Map<String, McUser> result = UserManager.getAllGuildUsers(guild.config.getId());
                         UpdatePlayersMessage msg = new UpdatePlayersMessage(guild.config.getId(), guild.getRedis().getNextCommandId());
                         msg.setPlayers(result);
-                        ListenableFuture<ResponseMessage> future = guild.getRedis().sendCommand(guild.config.getId(), msg);
-                        Futures.transform(future, FunctionManager.UpdatePlayerFunction(guild));
+                        ListenableFuture<AMessage> future = guild.getRedis().sendCommand(guild.config.getId(), msg);
+                        Futures.addCallback(future, FunctionManager.UpdatePlayers(guild,u));
                     }else{
                         Utility.sendPrivateMessage(u,"No Bungee Instance available");
 

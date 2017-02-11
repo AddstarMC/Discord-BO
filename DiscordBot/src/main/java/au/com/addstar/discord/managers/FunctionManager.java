@@ -1,14 +1,18 @@
 package au.com.addstar.discord.managers;
 
 import au.com.addstar.discord.SimpleBot;
-import au.com.addstar.discord.managers.UserManager;
-import au.com.addstar.discord.messages.CommandType;
-import au.com.addstar.discord.messages.ResponseMessage;
-import au.com.addstar.discord.messages.UpdatePlayerResponseMessage;
+import au.com.addstar.discord.messages.AMessage;
+import au.com.addstar.discord.messages.UpdatePlayersMessage;
+import au.com.addstar.discord.messages.identifiers.CommandType;
 import au.com.addstar.discord.objects.Guild;
 import au.com.addstar.discord.objects.McUser;
 import java.util.Map;
-import com.google.common.base.Function;
+
+import au.com.addstar.discord.ulilities.Utility;
+import com.google.common.util.concurrent.FutureCallback;
+import sx.blah.discord.handle.obj.IUser;
+
+import static au.com.addstar.discord.managers.UserManager.saveCache;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -16,43 +20,51 @@ import com.google.common.base.Function;
  */
 public class FunctionManager {
 
-    public static Function<ResponseMessage, Object> UpdatePlayerFunction(Guild guild){
-        return new Function<ResponseMessage, Object>() {
-            public Object apply(ResponseMessage message) {
-                if(message.getType() == CommandType.UpdatePlayer){
-                    UpdatePlayerResponseMessage updateMessage = (UpdatePlayerResponseMessage) message;
-                    if(updateMessage.getServerID().equals(guild.config.getId())) {
+    public static FutureCallback<AMessage> UpdatePlayers(Guild guild, IUser u) {
+        return new FutureCallback<AMessage>() {
+            @Override
+            public void onSuccess(AMessage message) {
+
+                if (message.getCommandType() == CommandType.UpdatePlayer) {
+                    UpdatePlayersMessage updateMessage = (UpdatePlayersMessage) message;
+                    if (updateMessage.getSourceId().equals(guild.config.getId())) {
                         Map<String, McUser> updatedPlayers = updateMessage.getPlayers();
-                        String serverId = updateMessage.getServerID();
+                        String serverId = updateMessage.getSourceId();
                         Map<String, McUser> currentUsers = UserManager.getAllGuildUsers(serverId);
-                        for(Map.Entry<String, McUser> e: updatedPlayers.entrySet()){
+                        for (Map.Entry<String, McUser> e : updatedPlayers.entrySet()) {
                             McUser user = currentUsers.get(e.getKey());
                             McUser updatedUser = e.getValue();
-                            if(user.getDiscordID().equals(updatedUser.getDiscordID())) {
-                                user.addUpdateDisplayName(serverId,updatedUser.getDisplayName(serverId));
-                                if(user.getMinecraftUUID() != updatedUser.getMinecraftUUID()){
+                            if (user.getDiscordID().equals(updatedUser.getDiscordID())) {
+                                user.addUpdateDisplayName(serverId, updatedUser.getDisplayName(serverId));
+                                if (user.getMinecraftUUID() != updatedUser.getMinecraftUUID()) {
                                     SimpleBot.log.info(user.getDiscordID() + ":" + user.getDisplayName(serverId) + " UUID updated.");
                                     user.setMinecraftUUID(updatedUser.getMinecraftUUID());
-                                    if(updatedUser.getDetail() != null && updatedUser.getDetail().size() >0 ){
-                                        for(Map.Entry<String, String> detail: updatedUser.getDetail().entrySet()){
-                                            if(user.getDetail().containsKey(detail.getKey())){
-                                                user.storeDetail(detail.getKey(),detail.getValue());
-                                            }
+                                    Map<String, String> details = updatedUser.getDetails();
+                                    if (details != null && details.size() > 0) {
+                                        for (Map.Entry<String, String> detail : details.entrySet()) {
+                                            user.storeDetail(detail.getKey(), detail.getValue());
                                         }
                                     }
                                 }
-                                currentUsers.put(serverId,user);
+                                currentUsers.put(serverId, user);
                             }
                         }
-                        UserManager.saveCache();
+                        saveCache();
+                        Utility.sendPrivateMessage(u,"Player Data Updated");
                     }
+                    Utility.sendPrivateMessage(u, "Guild ID and sourceID of response did not match..");
 
                 }
-                return null;
+                Utility.sendPrivateMessage(u, "Message was incorrect type...");
+            }
+
+
+            @Override
+            public void onFailure(Throwable t) {
+                Utility.sendPrivateMessage(u, "Exception: " + t.getMessage());
+
             }
 
         };
     }
-
-
 }
