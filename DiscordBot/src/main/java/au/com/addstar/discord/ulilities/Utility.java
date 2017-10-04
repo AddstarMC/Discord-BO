@@ -5,9 +5,7 @@ import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.*;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -31,7 +29,7 @@ public class Utility {
 
     }
 
-    public static void sendChannelMessage(String announceID, String m){
+    public static void sendChannelMessage(Long announceID, String m){
         IChannel aChannel = SimpleBot.client.getChannelByID(announceID);
         MessageBuilder builder = new MessageBuilder(SimpleBot.client).withChannel(aChannel).withContent(m);
         try {
@@ -44,25 +42,14 @@ public class Utility {
             SimpleBot.log.error("Missing permissions for channel!");
     }
     }
-    public static void deleteMessages(MessageList list,int r){
-        try {
-            int lastindex;
-            if(r>list.size()){
-                lastindex = list.size();
-            }else{
-                lastindex = r;
+    public static void deleteMessages(IChannel chan,int r){
+            int size = chan.getMessageHistory().size();
+            if(r > size ){
+                chan.bulkDelete();
+                return;
             }
-            if (lastindex>100)lastindex=100;
-            if (lastindex < 1)lastindex=1;
-            int firstindex = 0;
-            list.deleteFromRange(firstindex,lastindex);
-        } catch (RateLimitException | DiscordException e) {
-            e.printStackTrace();
-        } catch (MissingPermissionsException e) {
-            SimpleBot.log.error("Permission Error");
-            e.printStackTrace();
-        }
-
+            MessageHistory history = chan.getMessageHistory(r);
+            history.bulkDelete();
     }
 
 

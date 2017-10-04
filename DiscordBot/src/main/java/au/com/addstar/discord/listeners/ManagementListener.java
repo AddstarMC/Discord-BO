@@ -7,14 +7,13 @@ import au.com.addstar.discord.objects.McUser;
 import au.com.addstar.discord.ulilities.Utility;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.PresenceUpdateEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
-import sx.blah.discord.handle.impl.events.UserJoinEvent;
-import sx.blah.discord.handle.impl.events.UserLeaveEvent;
-import sx.blah.discord.handle.impl.obj.User;
+import sx.blah.discord.handle.impl.events.guild.member.UserLeaveEvent;
+import sx.blah.discord.handle.impl.events.guild.member.UserJoinEvent;
+import sx.blah.discord.handle.impl.events.user.PresenceUpdateEvent;
 import sx.blah.discord.handle.obj.IGuild;
+import sx.blah.discord.handle.obj.IPresence;
 import sx.blah.discord.handle.obj.IUser;
-import sx.blah.discord.handle.obj.Presences;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +29,7 @@ public class ManagementListener {
     public void onReadyEvent(ReadyEvent event){
         IDiscordClient client = event.getClient(); // Gets the client from the event object
         for (IGuild guild : client.getGuilds()){
-            String id = guild.getID();
+            Long id = guild.getLongID();
             GuildConfig config  =  new GuildConfig(id);
             SimpleBot.gConfigs.put(id, config);
         }
@@ -41,10 +40,10 @@ public class ManagementListener {
     public void onJoinEvent(UserJoinEvent event){
         IUser u = event.getUser();
         IGuild g = event.getGuild();
-        GuildConfig config = SimpleBot.gConfigs.get(g.getID());
-        McUser user = UserManager.loadUserFromFile(u.getID());
+        GuildConfig config = SimpleBot.gConfigs.get(g.getLongID());
+        McUser user = UserManager.loadUserFromFile(u.getLongID());
         if(user == null){
-            user = new McUser(u.getID());
+            user = new McUser(u.getLongID());
             UserManager.cacheUser(user);
         }
         Utility.sendPrivateMessage(u, config.getWelcomeMessage());
@@ -54,28 +53,28 @@ public class ManagementListener {
     public void onLeaveEvent(UserLeaveEvent e){
         IUser u = e.getUser();
         IGuild g = e.getGuild();
-        GuildConfig config = SimpleBot.gConfigs.get(g.getID());
+        GuildConfig config = SimpleBot.gConfigs.get(g.getLongID());
         Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has left  " + g.getName());
     }
 
 
     @EventSubscriber
     public void onUserPresenceChange(PresenceUpdateEvent e){
-        Presences p = e.getNewPresence();
+        IPresence p = e.getNewPresence();
         IUser u = e.getUser();
-        McUser user = UserManager.loadUser(u.getID());
+        McUser user = UserManager.loadUser(u.getLongID());
         List<IGuild> userGuilds = new ArrayList<>();
         if(user != null){
-            for(Map.Entry<String, String> entry : user.getDisplayNames().entrySet()){
+            for(Map.Entry<Long, String> entry : user.getDisplayNames().entrySet()){
                 IGuild guild = e.getClient().getGuildByID(entry.getKey());
                 if (guild!=null)userGuilds.add(guild);
             }
         }else{
             SimpleBot.log.info("User : " + u.getName() + "has been cached with no mcUuid you need to run an update on that user.");
-            user = new McUser(u.getID());
+            user = new McUser(u.getLongID());
             List<IGuild> guilds = e.getClient().getGuilds();
             for(IGuild g : guilds){
-            if(g.getUserByID(u.getID())!=null){
+            if(g.getUserByID(u.getLongID())!=null){
                 userGuilds.add(g);
                 UserManager.checkUserDisplayName(user,g);
             }
@@ -83,7 +82,7 @@ public class ManagementListener {
         }
         }
         String message = "";
-        switch(p){
+        switch(p.getStatus()){
             case ONLINE:
                 message = " has come online.";
                 break;
@@ -100,10 +99,10 @@ public class ManagementListener {
                 message = " has started streaming";
         }
         for(IGuild g : userGuilds){
-            GuildConfig config = SimpleBot.gConfigs.get(g.getID());
-            String channelID =config.getModChannelID();
+            GuildConfig config = SimpleBot.gConfigs.get(g.getLongID());
+            Long channelID =config.getModChannelID();
             Boolean report = config.isReportStatusChange();
-            if(channelID != null && channelID.length()>0 && report) {
+            if(channelID != null && channelID >0 && report) {
                 Utility.sendChannelMessage(channelID, u.getDisplayName(g) + message);
             }else{
                 SimpleBot.log.info(g.getName() + ": " + u.getDisplayName(g) + message);

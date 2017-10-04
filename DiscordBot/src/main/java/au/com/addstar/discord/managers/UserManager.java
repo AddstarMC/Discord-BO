@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class UserManager {
 
-    private static Map<String, McUser> userCache = new HashMap<>();
+    private static Map<Long, McUser> userCache = new HashMap<>();
     private static Gson gsonencoder = new Gson();
     private static Type type = new TypeToken<McUser>(){}.getType();
 
@@ -34,11 +34,11 @@ public class UserManager {
         for (IGuild guild : guilds){
             List<IUser> users = guild.getUsers();
             for(IUser user : users){
-                McUser mcUser = loadUserFromFile(user.getID());
+                McUser mcUser = loadUserFromFile(user.getLongID());
                 if (mcUser == null){
-                    SimpleBot.log.info("No save exists for User:" + user.getID());
-                    mcUser = new McUser(user.getID());
-                    mcUser.addUpdateDisplayName(guild.getID(),user.getDisplayName(guild));
+                    SimpleBot.log.info("No save exists for User:" + user.getStringID());
+                    mcUser = new McUser(user.getLongID());
+                    mcUser.addUpdateDisplayName(guild.getLongID(),user.getDisplayName(guild));
                     saveUserToFile(mcUser);
                 }
                 cacheUser(mcUser);
@@ -49,15 +49,15 @@ public class UserManager {
 
 
     public static void addGuildtoUser(McUser user, String displayName, IGuild guild) {
-        user.addUpdateDisplayName(guild.getID(),displayName);
+        user.addUpdateDisplayName(guild.getLongID(),displayName);
     }
 
     public static void cacheUser(McUser u) {
-        String key = u.getDiscordID();
+        Long key = u.getDiscordID();
         userCache.put(key, u);
     }
 
-    private static McUser loadfromCache(String id){
+    private static McUser loadfromCache(Long id){
         return userCache.get(id);
     }
 
@@ -76,7 +76,7 @@ public class UserManager {
         if (!parent.exists()) {
             parent.mkdir();
         }
-        for (Map.Entry<String, McUser> e : userCache.entrySet()) {
+        for (Map.Entry<Long, McUser> e : userCache.entrySet()) {
             String fileName = e.getKey() + ".json";
             File outFile = new File(parent, fileName);
             boolean exists = outFile.exists();
@@ -134,11 +134,11 @@ public class UserManager {
         SimpleBot.log.info("User saved to disk");
 
     }
-    public static McUser loadUser(String id){
+    public static McUser loadUser(Long id){
         McUser user = loadfromCache(id);
         return(user == null)?loadUserFromFile(id):user;
     }
-    public static McUser loadUserFromFile(String id){
+    public static McUser loadUserFromFile(Long id){
         File parent = new File("users");
         if(!parent.exists()){
             return null;
@@ -184,7 +184,7 @@ public class UserManager {
     }
 
     public static void checkUserDisplayName(McUser user, IGuild guild){
-        String savedName = user.getDisplayName(guild.getID());
+        String savedName = user.getDisplayName(guild.getLongID());
         String currName = guild.getUserByID(user.getDiscordID()).getDisplayName(guild);
         if(savedName != null){
         if(savedName != currName){
@@ -194,7 +194,7 @@ public class UserManager {
             setUserNick(guild,discordUser,savedName);
             }
         }else{
-            user.addUpdateDisplayName(guild.getID(),currName);
+            user.addUpdateDisplayName(guild.getLongID(),currName);
             saveUser(user);
         }
     }

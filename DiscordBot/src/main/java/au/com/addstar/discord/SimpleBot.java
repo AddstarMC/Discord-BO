@@ -29,7 +29,7 @@ public class SimpleBot {
     public static SimpleBot instance;
     public static IDiscordClient client;
     public static Properties config;
-    public static HashMap<String,GuildConfig> gConfigs;
+    public static HashMap<Long,GuildConfig> gConfigs;
     static HttpServer server;
     public static final Logger log = LoggerFactory.getLogger(SimpleBot.class);
 
@@ -117,7 +117,7 @@ public class SimpleBot {
     private static void close() throws DiscordException {
         SimpleBot.log.info("Server shut down initiated...");
         SimpleBot.log.info("Saving Guild Configs");
-        for(Map.Entry<String,GuildConfig> entry : SimpleBot.gConfigs.entrySet()){
+        for(Map.Entry<Long,GuildConfig> entry : SimpleBot.gConfigs.entrySet()){
             GuildConfig guildconfig = entry.getValue();
             guildconfig.saveConfig();
         }

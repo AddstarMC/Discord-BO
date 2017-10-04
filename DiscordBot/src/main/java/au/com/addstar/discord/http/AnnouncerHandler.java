@@ -63,7 +63,7 @@ public class AnnouncerHandler implements HttpHandler {
             }
             IGuild guild = Utilities.getGuildbyName(path[2]);
             IChannel channel = Utilities.getChannelbyName(guild, path[3]);
-            Utility.sendChannelMessage(channel.getID(),message);
+            Utility.sendChannelMessage(channel.getLongID(),message);
             SimpleBot.log.info("Message recieved on Announcer: Guild: " + path[2] + " Channel:" + path[3] + "Message: " + message);
         }
         Utilities.doResponse(t,responseCode,contentHeaderList, response);

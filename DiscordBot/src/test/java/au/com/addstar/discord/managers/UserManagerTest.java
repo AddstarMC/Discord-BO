@@ -26,17 +26,17 @@ public class UserManagerTest {
     @Test
     public void checkUserDisplayNameTest() throws Exception {
         IUser user2 = mock(IUser.class);
-        when(user2.getID()).thenReturn("654321");
+        when(user2.getLongID()).thenReturn(654321L);
         when(user2.getDisplayName(guild)).thenReturn("TestUser2");
-        when(guild.getUserByID(user2.getID())).thenReturn(user2);
-        McUser mUser = new McUser("654321");
-        assertNull(mUser.getDisplayName(guild.getID()));
+        when(guild.getUserByID(user2.getLongID())).thenReturn(user2);
+        McUser mUser = new McUser(654321L);
+        assertNull(mUser.getDisplayName(guild.getLongID()));
         UserManager.checkUserDisplayName(mUser,guild);
         UserManager.addGuildtoUser(mUser,"TestUser4",guild);
-        assertEquals(mUser.getDisplayName(guild.getID()), "TestUser4");
+        assertEquals(mUser.getDisplayName(guild.getLongID()), "TestUser4");
         when(user2.getDisplayName(guild)).thenReturn("TestUser5");
         UserManager.checkUserDisplayName(mUser,guild);
-        assertEquals(mUser.getDisplayName(guild.getID()), "TestUser4");
+        assertEquals(mUser.getDisplayName(guild.getLongID()), "TestUser4");
     }
 
     private IGuild guild;
@@ -47,9 +47,9 @@ public class UserManagerTest {
 
     @Test
     public void addGuildtoUser() throws Exception {
-        McUser testUser = new McUser(user.getID());
+        McUser testUser = new McUser(user.getLongID());
         UserManager.addGuildtoUser(testUser,"TesterUser",guild);
-        assertTrue(Objects.equals(testUser.getDisplayName(guild.getID()), "TesterUser"));
+        assertTrue(Objects.equals(testUser.getDisplayName(guild.getLongID()), "TesterUser"));
     }
 
     @Test
@@ -64,14 +64,14 @@ public class UserManagerTest {
 
     @Test
     public void saveUserTest() throws Exception {
-        McUser testUser = new McUser(user.getID());
-        testUser.addUpdateDisplayName(guild.getID(),"TestUser");
+        McUser testUser = new McUser(user.getLongID());
+        testUser.addUpdateDisplayName(guild.getLongID(),"TestUser");
         saveUser(testUser);
         McUser newUser =  UserManager.loadUser(testUser.getDiscordID());
-        assertEquals(newUser.getDisplayName(guild.getID()),testUser.getDisplayName(guild.getID()));
+        assertEquals(newUser.getDisplayName(guild.getLongID()),testUser.getDisplayName(guild.getLongID()));
         UserManager.removeUser(newUser);
         McUser newUSer2 =  UserManager.loadUser(testUser.getDiscordID());
-        assertEquals(newUSer2.getDisplayName(guild.getID()),testUser.getDisplayName(guild.getID()));
+        assertEquals(newUSer2.getDisplayName(guild.getLongID()),testUser.getDisplayName(guild.getLongID()));
 
     }
 
@@ -80,7 +80,7 @@ public class UserManagerTest {
         UserManager.initialize(client);
         assertEquals(client.getGuilds().get(0),guild);
         assertEquals(guild.getUsers().get(0), user);
-        assertEquals(UserManager.loadUser("12345").getDisplayName(guild.getID()),"TestUser" );
+        assertEquals(UserManager.loadUser(12345L).getDisplayName(guild.getLongID()),"TestUser" );
     }
 
 
@@ -93,10 +93,10 @@ public class UserManagerTest {
         guild= mock(IGuild.class);
         iUsers.add(user);
         guilds.add(guild);
-        when(user.getID()).thenReturn("12345");
+        when(user.getLongID()).thenReturn(12345L);
         when(guild.getUsers()).thenReturn(iUsers);
         when(user.getDisplayName(guild)).thenReturn("TestUser");
-        when(guild.getID()).thenReturn("2000000000");
+        when(guild.getLongID()).thenReturn(2000000000L);
         iUsers.add(user);
 
 

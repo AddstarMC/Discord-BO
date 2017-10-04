@@ -56,7 +56,7 @@ class Utilities {
         return guild;
     }
     static IChannel getChannelbyName(IGuild guild, String name) {
-        List<IChannel> channels = SimpleBot.client.getGuildByID(guild.getID()).getChannelsByName(name);
+        List<IChannel> channels = SimpleBot.client.getGuildByID(guild.getLongID()).getChannelsByName(name);
         if (channels.size() == 1) return channels.get(0);
         return null;
     }

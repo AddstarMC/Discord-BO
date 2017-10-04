@@ -1,6 +1,8 @@
 package au.com.addstar.discord.objects;
 
 import au.com.addstar.discord.managers.InvitationManager;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jetty.util.StringUtil;
 
 import java.io.*;
 import java.util.*;
@@ -13,21 +15,21 @@ import java.util.*;
 public class GuildConfig {
 
 
-        private final String id;
+        private final Long id;
         private String prefix;
         private String welcomeMessage;
-        private String announceChannelID;
-        private String modChannelID;
+        private Long announceChannelID;
+        private Long modChannelID;
         private Boolean reportStatusChange;
         private Integer expiryTime; //expiry time in seconds
         private Map<String, Invitation> inviteCache;
 
-        public GuildConfig(String id){
+        public GuildConfig(Long id){
                 this.id = id;
                 prefix = "!!";
                 welcomeMessage = "";
-                announceChannelID = "";
-                modChannelID = "";
+                announceChannelID = 0L;
+                modChannelID = 0L;
                 reportStatusChange = false;
                 inviteCache =  new HashMap<>();
                 expiryTime = 7200;
@@ -38,7 +40,7 @@ public class GuildConfig {
                 this.inviteCache = inviteCache;
         }
 
-        public String getId() {
+        public Long getId() {
                 return id;
         }
 
@@ -54,19 +56,19 @@ public class GuildConfig {
                 this.reportStatusChange = reportStatusChange;
         }
 
-        public String getModChannelID() {
+        public Long getModChannelID() {
                 return modChannelID;
         }
 
-        public void setModChannelID(String modChannelID) {
+        public void setModChannelID(Long modChannelID) {
                 this.modChannelID = modChannelID;
         }
 
-        public String getAnnounceChannelID() {
+        public Long getAnnounceChannelID() {
                 return announceChannelID;
         }
 
-        public void setAnnounceChannelID(String announceChannelID) {
+        public void setAnnounceChannelID(Long announceChannelID) {
                 this.announceChannelID = announceChannelID;
         }
 
@@ -130,8 +132,8 @@ public class GuildConfig {
                 }
                 welcomeMessage = prop.getProperty("welcomeMessage","");
                 prefix = prop.getProperty("prefix","!!");
-                announceChannelID = prop.getProperty("announceChannelID","");
-                modChannelID = prop.getProperty("modChannelID","");
+                announceChannelID = (long) prop.getOrDefault("announceChannelID",0L);
+                modChannelID = (long) prop.getOrDefault("modChannelID",0L);
                 reportStatusChange = Boolean.getBoolean(prop.getProperty("reportStatusChange", Boolean.toString(false)));
                 expiryTime = Integer.parseInt(prop.getProperty("expiryTime", "7200"));
                 InvitationManager.loadInvites(this);
@@ -171,8 +173,8 @@ public class GuildConfig {
                 }
                 return (prop.getProperty("welcomeMessage").equals(welcomeMessage) &&
                         prop.getProperty("prefix").equals(prefix) &&
-                        prop.getProperty("announceChannelID").equals(announceChannelID) &&
-                        prop.getProperty("modChannelID").equals(modChannelID) &&
+                        Long.parseLong(prop.getProperty("announceChannelID")) == announceChannelID &&
+                        Long.parseLong(prop.getProperty("modChannelID")) == modChannelID &&
                         prop.getProperty("reportStatusChange").equals(reportStatusChange.toString()) &&
                         prop.getProperty("expiryTime").equals(expiryTime.toString()));
         }
@@ -181,8 +183,8 @@ public class GuildConfig {
                 Properties prop = new Properties();
                 prop.setProperty("welcomeMessage",welcomeMessage);
                 prop.setProperty("prefix",prefix);
-                prop.setProperty("announceChannelID",announceChannelID);
-                prop.setProperty("modChannelID",modChannelID);
+                prop.setProperty("announceChannelID",announceChannelID.toString());
+                prop.setProperty("modChannelID",modChannelID.toString());
                 prop.setProperty("reportStatusChange",reportStatusChange.toString());
                 prop.setProperty("expiryTime",expiryTime.toString());
                 return prop;

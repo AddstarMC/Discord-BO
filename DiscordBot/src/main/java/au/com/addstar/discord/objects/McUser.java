@@ -12,15 +12,15 @@ import java.util.UUID;
  */
 public class McUser {
 
-    private final String discordID;
+    private final Long discordID;
     private UUID minecraftUUID;
-    private Map<String, String> displayNames;
+    private Map<Long, String> displayNames;
     private Map<String, String> detail;
 
-    public String getDiscordID() {
+    public Long getDiscordID() {
         return discordID;
     }
-    public McUser(String discordID) {
+    public McUser(Long discordID) {
         this.discordID = discordID;
         displayNames = new HashMap<>();
     }
@@ -29,7 +29,7 @@ public class McUser {
         return minecraftUUID;
     }
 
-    public void setDisplayNames(Map<String, String> displayNames) {
+    public void setDisplayNames(Map<Long, String> displayNames) {
         this.displayNames = displayNames;
     }
 
@@ -37,15 +37,15 @@ public class McUser {
         this.minecraftUUID = minecraftUUID;
     }
 
-    public void addUpdateDisplayName(String guildID, String name){
+    public void addUpdateDisplayName(Long guildID, String name){
         displayNames.put(guildID,name);
     }
 
-    public String getDisplayName(String guildId){
-        return displayNames.get(guildId);
+    public String getDisplayName(Long guildID){
+        return displayNames.get(guildID);
     }
 
-    public Map<String, String> getDisplayNames(){
+    public Map<Long, String> getDisplayNames(){
         return displayNames;
     }
 

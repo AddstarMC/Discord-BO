@@ -8,10 +8,9 @@ import au.com.addstar.discord.objects.Invitation;
 import au.com.addstar.discord.objects.McUser;
 import au.com.addstar.discord.ulilities.Utility;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.MessageBuilder.Styles;
-import sx.blah.discord.util.MessageList;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -35,7 +34,7 @@ public class CommandListener {
             return;//no handling PMs here
         }
         IGuild g = m.getGuild();
-        GuildConfig config = SimpleBot.gConfigs.get(g.getID());
+        GuildConfig config = SimpleBot.gConfigs.get(g.getStringID());
         String prefix = config.getPrefix();
         String message = m.getContent();
         if (!message.startsWith(prefix)) {
@@ -87,7 +86,7 @@ public class CommandListener {
                                 IChannel oldChannel = SimpleBot.client.getChannelByID(config.getAnnounceChannelID());
 
                                 if (mSplit.length > 2) {
-                                    String newAnnounceID = mSplit[2];
+                                    Long newAnnounceID = Long.parseLong(mSplit[2]);
                                     IChannel newChannel = SimpleBot.client.getChannelByID(newAnnounceID);
                                     if (newChannel == null) {
                                         if (oldChannel != null) {
@@ -113,7 +112,7 @@ public class CommandListener {
                                 IChannel oldMChannel = SimpleBot.client.getChannelByID(config.getModChannelID());
 
                                 if (mSplit.length > 2) {
-                                    String newModChannelID = mSplit[2];
+                                    Long newModChannelID = Long.parseLong(mSplit[2]);
                                     IChannel newChannel = SimpleBot.client.getChannelByID(newModChannelID);
                                     if (newChannel == null) {
                                         if (oldMChannel != null) {
@@ -163,7 +162,7 @@ public class CommandListener {
                     }
 
                 case "reloadguildconfig":
-                    GuildConfig c = SimpleBot.gConfigs.get(m.getGuild().getID());
+                    GuildConfig c = SimpleBot.gConfigs.get(m.getGuild().getLongID());
                     c.loadConfig();
                     Utility.sendPrivateMessage(u, "Configurations reloaded");
                     return;
@@ -196,8 +195,7 @@ public class CommandListener {
                         i = Integer.parseInt(num);
                     }
                     if (i < 1) i = 1;
-                    MessageList list = m.getChannel().getMessages();
-                    deleteMessages(list, i);
+                    deleteMessages(m.getChannel(), i);
                     Utility.sendPrivateMessage(u,i+" messages deleted from " + m.getChannel().getName());
                     SimpleBot.log.info(u.getName() + " deleted " + i + " messages from " + m.getChannel().getName());
                     deleteMessage(m);
@@ -251,12 +249,12 @@ public class CommandListener {
                             SimpleBot.log.info(u.getName() + " applied Role: "+userroles.get(0).getName());
                         }
                         Utility.sendPrivateMessage(u,"Registration complete.");
-                        McUser user = UserManager.loadUser(u.getID());
+                        McUser user = UserManager.loadUser(u.getLongID());
                         if (user == null){
                             SimpleBot.log.info("MCUSER was null - should have been created on join??.");
-                            user = new McUser(u.getID());
+                            user = new McUser(u.getLongID());
                         }
-                        user.addUpdateDisplayName(g.getID(),invite.getUserName());
+                        user.addUpdateDisplayName(g.getLongID(),invite.getUserName());
                         user.setMinecraftUUID(invite.getUuid());
                         UserManager.saveUser(user);
                         SimpleBot.log.info("Registration complete.");

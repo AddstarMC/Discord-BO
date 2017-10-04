@@ -23,8 +23,9 @@ public class GuildConfigTest {
     @Before
     public void setUp() throws Exception {
         createTestGuildConfigFile();
-        testConfig = new GuildConfig("200000000000000000");
         createTestInviteJsonFile();
+        Long id = 200000000000000000L;
+        testConfig = new GuildConfig(id);
         invite = createNewInvitation("Test12345");
 
     }
@@ -34,18 +35,18 @@ public class GuildConfigTest {
         createTestGuildConfigFile();
         testConfig.loadConfig();
         Assert.assertEquals("TEST Server", testConfig.getWelcomeMessage());
-        Assert.assertEquals("205586118752600064", testConfig.getAnnounceChannelID());
+        Assert.assertTrue(205586118752600064L == testConfig.getAnnounceChannelID());
         Assert.assertEquals("!!", testConfig.getPrefix());
     }
 
     @Test
     public void testSaveConfig() throws Exception {
-        Assert.assertEquals("", testConfig.getModChannelID());
-        testConfig.setModChannelID("RANDOMID");
+        Assert.assertTrue(0L == testConfig.getModChannelID());
+        testConfig.setModChannelID(000000000L);
         testConfig.saveConfig();
         testConfig = null;
-        testConfig = new GuildConfig("200000000000000000");
-        Assert.assertEquals("RANDOMID", testConfig.getModChannelID());
+        testConfig = new GuildConfig(200000000000000000L);
+        Assert.assertTrue(000000000L == testConfig.getModChannelID());
     }
 
     @Test
@@ -56,7 +57,7 @@ public class GuildConfigTest {
         Invitation retrieved = InvitationManager.getInvitation(testConfig,"Test12345");
         Assert.assertNull(retrieved);
         retrieved = InvitationManager.getExpiredInvite(testConfig,"Test12345");
-        Assert.assertTrue(retrieved.equals(invite));
+        Assert.assertEquals(invite,retrieved);
 
     }
 

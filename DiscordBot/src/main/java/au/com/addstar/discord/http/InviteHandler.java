@@ -54,7 +54,7 @@ public class InviteHandler implements HttpHandler {
             Utilities.doResponse(t, responseCode, contentHeaderList, response);
             return;
         }
-        GuildConfig config = SimpleBot.gConfigs.get(guild.getID());
+        GuildConfig config = SimpleBot.gConfigs.get(guild.getLongID());
         int expiry = config.getExpiryTime();
         Invitation pendingInvitation = InvitationManager.checkForUUIDInvite(config, uuid);
         if (pendingInvitation != null && pendingInvitation.hasExpired()) {
@@ -73,7 +73,7 @@ public class InviteHandler implements HttpHandler {
             SimpleBot.log.info("Stored Invite will be returned for " + pendingInvitation.getUserName() + " : " + pendingInvitation.getInviteCode());
 
         }
-        List<IChannel> channels = SimpleBot.client.getGuildByID(guild.getID()).getChannelsByName(channelName);
+        List<IChannel> channels = SimpleBot.client.getGuildByID(guild.getLongID()).getChannelsByName(channelName);
         IChannel channel = Utilities.getChannelbyName(guild, channelName);
         if (channel == null) {
             responseCode = HttpStatus.SC_BAD_REQUEST;
@@ -96,11 +96,11 @@ public class InviteHandler implements HttpHandler {
             if (invite != null) {
                 Long expiryTime = System.currentTimeMillis() + (120 * 60 * 1000);
                 responseCode = HttpStatus.SC_OK;
-                responsebuilder.put("url", "https://discord.gg/" + invite.getInviteCode());
-                responsebuilder.put("cmd", config.getPrefix() + "register " + invite.getInviteCode());
+                responsebuilder.put("url", "https://discord.gg/" + invite.getCode());
+                responsebuilder.put("cmd", config.getPrefix() + "register " + invite.getCode());
                 Utilities.doJsonResponse(t, responseCode, responsebuilder);
-                SimpleBot.log.info("Invite Code Generated for " + user + " : " + invite.getInviteCode());
-                InvitationManager.storeInvitation(config,new Invitation(uuid, user, expiryTime, invite.getInviteCode()));
+                SimpleBot.log.info("Invite Code Generated for " + user + " : " + invite.getCode());
+                InvitationManager.storeInvitation(config,new Invitation(uuid, user, expiryTime, invite.getCode()));
                 return;
             } else {
                 responseCode = HttpStatus.SC_BAD_REQUEST;

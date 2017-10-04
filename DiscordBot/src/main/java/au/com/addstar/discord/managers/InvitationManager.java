@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import org.jetbrains.annotations.Nullable;
 import sx.blah.discord.handle.obj.IChannel;
+import sx.blah.discord.handle.obj.IExtendedInvite;
 import sx.blah.discord.handle.obj.IInvite;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
@@ -33,7 +34,7 @@ public class InvitationManager {
         if (config.getInviteCache().size() == 0) return;
         Gson gsonencoder = new Gson();
         File parent = new File("guilds");
-        File sub = new File(parent, config.getId());
+        File sub = new File(parent, config.getId().toString());
         if (!sub.exists()) {
             sub.mkdir();
         }
@@ -57,7 +58,7 @@ public class InvitationManager {
         SimpleBot.log.info("Loading Invitations from file (Current:" +size +")");
         Gson gsondecoder = new Gson();
         File parent = new File ("guilds");
-        File sub =  new File(parent,config.getId());
+        File sub =  new File(parent,config.getId().toString());
         Map<String,Invitation> loadedInvites = null;
         if (!sub.exists()){
             return;
@@ -142,10 +143,10 @@ public class InvitationManager {
     }
     public static IInvite checkforInvite(IChannel chan, Invitation botinvite){
         try {
-            List<IInvite> invites = chan.getInvites();
+            List<IExtendedInvite> invites = chan.getExtendedInvites();
             for(IInvite invite : invites){
-                if(invite.getInviteCode().equals(botinvite.getInviteCode()))return invite;
-                SimpleBot.log.info("Invite Code matched Discord Invite: " + invite.getInviteCode() +" Expiry: "  + Utility.getDate(botinvite.getExpiryTime()));
+                if(invite.getCode().equals(botinvite.getInviteCode()))return invite;
+                SimpleBot.log.info("Invite Code matched Discord Invite: " + invite.getCode() +" Expiry: "  + Utility.getDate(botinvite.getExpiryTime()));
             }
         } catch (DiscordException | RateLimitException e) {
             e.printStackTrace();
@@ -157,7 +158,7 @@ public class InvitationManager {
     }
     public static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp){
 
-        return createInvite(chan, age, maxUses, true,true);
+        return createInvite(chan, age, maxUses, temp,true);
     }
     public static IInvite createInvite(IChannel chan, int age, int maxUses, Boolean temp, boolean unique){
         IInvite invite = null;
