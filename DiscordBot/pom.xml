@@ -20,6 +20,7 @@
             <groupId>com.github.austinv11</groupId>
             <artifactId>Discord4J</artifactId>
             <version>2.9</version>
+                <classifier>shaded</classifier>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -113,23 +114,7 @@
                 <artifactId>versions-maven-plugin</artifactId>
                 <version>2.3</version>
             </plugin>
-            <plugin>
-                <groupId>org.eluder.coveralls</groupId>
-                <artifactId>coveralls-maven-plugin</artifactId>
-                <version>4.3.0</version>
-                <configuration>
-                    <repoToken/>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>coverage</id>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
-            </plugin>
+
         </plugins>
     </build>
     <profiles>
@@ -162,6 +147,23 @@
                                     <goal>cobertura</goal>
                                 </goals>
                                 <phase>test</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.eluder.coveralls</groupId>
+                        <artifactId>coveralls-maven-plugin</artifactId>
+                        <version>4.3.0</version>
+                        <configuration>
+                            <repoToken/>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>coverage</id>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <phase>package</phase>
                             </execution>
                         </executions>
                     </plugin>

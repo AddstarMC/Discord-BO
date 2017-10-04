@@ -29,7 +29,7 @@ public class SimpleBot {
     public static SimpleBot instance;
     public static IDiscordClient client;
     public static Properties config;
-    public static HashMap<Long,GuildConfig> gConfigs;
+    private static HashMap<Long,GuildConfig> gConfigs;
     static HttpServer server;
     public static final Logger log = LoggerFactory.getLogger(SimpleBot.class);
 
@@ -70,6 +70,7 @@ public class SimpleBot {
     private static SimpleBot login(String token) {
         ClientBuilder builder = new ClientBuilder(); // Creates a new client builder instance
         builder.withToken(token);// Sets the bot token for the client
+        builder.withRecommendedShardCount();
         IDiscordClient c;
         try {
             c = builder.login(); // Builds the IDiscordClient instance and logs it in
@@ -123,6 +124,15 @@ public class SimpleBot {
         }
         SimpleBot.log.info("GuildConfigs saved.");
     }
+
+    public GuildConfig getGuildConfig(long id){
+        return gConfigs.get(id);
+    }
+
+    public void addGuild(long id, GuildConfig config){
+        gConfigs.put(id, config);
+    }
+
 
 
 

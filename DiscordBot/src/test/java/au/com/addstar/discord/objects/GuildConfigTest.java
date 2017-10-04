@@ -9,6 +9,7 @@ import org.junit.Test;
 import java.io.*;
 import java.net.URL;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -42,11 +43,12 @@ public class GuildConfigTest {
     @Test
     public void testSaveConfig() throws Exception {
         Assert.assertTrue(0L == testConfig.getModChannelID());
-        testConfig.setModChannelID(000000000L);
+        Long id = 0L;
+        testConfig.setModChannelID(id);
         testConfig.saveConfig();
         testConfig = null;
-        testConfig = new GuildConfig(200000000000000000L);
-        Assert.assertTrue(000000000L == testConfig.getModChannelID());
+        GuildConfig testConfig2 = new GuildConfig(200000000000000000L);
+        Assert.assertTrue( id == testConfig2.getModChannelID());
     }
 
     @Test
@@ -107,7 +109,7 @@ public class GuildConfigTest {
                 throw new IOException("Could not delete file"){
                 };
             } catch (IOException e) {
-               System.err.print(e.getLocalizedMessage());
+                Logger.getAnonymousLogger().info(e.getLocalizedMessage());
             }
         }
         try {
@@ -140,7 +142,7 @@ public class GuildConfigTest {
                 throw new IOException("Could not delete file"){
                 };
             } catch (IOException e) {
-                System.err.print(e.getLocalizedMessage());
+                Logger.getAnonymousLogger().info(e.getLocalizedMessage());
             }
         }
         try {

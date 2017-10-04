@@ -1,5 +1,6 @@
 package au.com.addstar.discord.objects;
 
+import au.com.addstar.discord.SimpleBot;
 import au.com.addstar.discord.managers.InvitationManager;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.util.StringUtil;
@@ -132,8 +133,20 @@ public class GuildConfig {
                 }
                 welcomeMessage = prop.getProperty("welcomeMessage","");
                 prefix = prop.getProperty("prefix","!!");
-                announceChannelID = (long) prop.getOrDefault("announceChannelID",0L);
-                modChannelID = (long) prop.getOrDefault("modChannelID",0L);
+                String temp = null;
+                try {
+                    temp = prop.getProperty("announceChannelID", "0");
+                        announceChannelID = Long.parseLong(temp);
+                }catch (NumberFormatException e){
+                    SimpleBot.log.warn("Config -> announceChannelID cannot be parsed to Long..." +temp);
+                }
+                try {
+                         temp = prop.getProperty("modChannelID", "0");
+                        modChannelID = Long.parseLong(temp);
+                }catch (NumberFormatException e){
+                    SimpleBot.log.warn("Config -> modChannelID cannot be parsed to Long..." + temp);
+
+                }
                 reportStatusChange = Boolean.getBoolean(prop.getProperty("reportStatusChange", Boolean.toString(false)));
                 expiryTime = Integer.parseInt(prop.getProperty("expiryTime", "7200"));
                 InvitationManager.loadInvites(this);
@@ -154,7 +167,7 @@ public class GuildConfig {
                         e.printStackTrace();
                 }
                 if(!checkSavedConfig(config)){
-                                System.err.print("Config failed to update on disk...");
+                                SimpleBot.log.warn("Config failed to update on disk...");
                 }
                 InvitationManager.saveInvites(this);
         }

@@ -25,13 +25,15 @@ import java.util.Map;
  */
 public class ManagementListener {
 
+    SimpleBot bot =  SimpleBot.instance;
+
     @EventSubscriber
     public void onReadyEvent(ReadyEvent event){
         IDiscordClient client = event.getClient(); // Gets the client from the event object
         for (IGuild guild : client.getGuilds()){
             Long id = guild.getLongID();
             GuildConfig config  =  new GuildConfig(id);
-            SimpleBot.gConfigs.put(id, config);
+            bot.addGuild(id, config);
         }
         UserManager.initialize(SimpleBot.client);
     }
@@ -40,7 +42,7 @@ public class ManagementListener {
     public void onJoinEvent(UserJoinEvent event){
         IUser u = event.getUser();
         IGuild g = event.getGuild();
-        GuildConfig config = SimpleBot.gConfigs.get(g.getLongID());
+        GuildConfig config = bot.getGuildConfig(g.getLongID());
         McUser user = UserManager.loadUserFromFile(u.getLongID());
         if(user == null){
             user = new McUser(u.getLongID());
@@ -53,7 +55,7 @@ public class ManagementListener {
     public void onLeaveEvent(UserLeaveEvent e){
         IUser u = e.getUser();
         IGuild g = e.getGuild();
-        GuildConfig config = SimpleBot.gConfigs.get(g.getLongID());
+        GuildConfig config = bot.getGuildConfig(g.getLongID());
         Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has left  " + g.getName());
     }
 
@@ -95,17 +97,19 @@ public class ManagementListener {
             case OFFLINE:
                 message = " is now offline,";
                 break;
-            case STREAMING:
-                message = " has started streaming";
+            default:
+                message = null;
         }
-        for(IGuild g : userGuilds){
-            GuildConfig config = SimpleBot.gConfigs.get(g.getLongID());
-            Long channelID =config.getModChannelID();
-            Boolean report = config.isReportStatusChange();
-            if(channelID != null && channelID >0 && report) {
-                Utility.sendChannelMessage(channelID, u.getDisplayName(g) + message);
-            }else{
-                SimpleBot.log.info(g.getName() + ": " + u.getDisplayName(g) + message);
+        if(message != null) {
+            for (IGuild g : userGuilds) {
+                GuildConfig config = bot.getGuildConfig(g.getLongID());
+                Long channelID = config.getModChannelID();
+                Boolean report = config.isReportStatusChange();
+                if (channelID != null && channelID > 0 && report) {
+                    Utility.sendChannelMessage(channelID, u.getDisplayName(g) + message);
+                } else {
+                    SimpleBot.log.info(g.getName() + ": " + u.getDisplayName(g) + message);
+                }
             }
         }
     }

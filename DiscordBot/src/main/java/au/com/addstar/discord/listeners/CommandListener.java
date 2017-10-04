@@ -34,7 +34,7 @@ public class CommandListener {
             return;//no handling PMs here
         }
         IGuild g = m.getGuild();
-        GuildConfig config = SimpleBot.gConfigs.get(g.getStringID());
+        GuildConfig config = SimpleBot.instance.getGuildConfig(g.getLongID());
         String prefix = config.getPrefix();
         String message = m.getContent();
         if (!message.startsWith(prefix)) {
@@ -162,7 +162,7 @@ public class CommandListener {
                     }
 
                 case "reloadguildconfig":
-                    GuildConfig c = SimpleBot.gConfigs.get(m.getGuild().getLongID());
+                    GuildConfig c = SimpleBot.instance.getGuildConfig(m.getGuild().getLongID());
                     c.loadConfig();
                     Utility.sendPrivateMessage(u, "Configurations reloaded");
                     return;
