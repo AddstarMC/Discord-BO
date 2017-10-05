@@ -54,7 +54,7 @@ public class InviteHandler implements HttpHandler {
             Utilities.doResponse(t, responseCode, contentHeaderList, response);
             return;
         }
-        GuildConfig config = SimpleBot.gConfigs.get(guild.getLongID());
+        GuildConfig config = SimpleBot.instance.getGuildConfig(guild.getLongID());
         int expiry = config.getExpiryTime();
         Invitation pendingInvitation = InvitationManager.checkForUUIDInvite(config, uuid);
         if (pendingInvitation != null && pendingInvitation.hasExpired()) {
