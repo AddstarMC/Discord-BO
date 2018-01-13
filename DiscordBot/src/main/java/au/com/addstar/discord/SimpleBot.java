@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
-import sx.blah.discord.util.DiscordException;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -41,46 +40,39 @@ public class SimpleBot {
 
     public static void main(String[] args) {
         config = Configuration.loadConfig();
-        String token = config.getProperty("discordToken");
+        String token = config.getProperty("discordToken", null);
         if(token==null){
             SimpleBot.log.info("Server shut down initiated...");
             SimpleBot.log.info("You must edit the config.properties file and add your discord app private token.");
             System.exit(1);
         }
-        instance = login(config.getProperty("discordToken"));
-
+        instance = login(token);
+        if(instance == null){
+            SimpleBot.log.info("We could not instantiate a valid Bot....");
+            close();
+        }
         configureListeners();
         server = createHttpServer();
         addContexts(server);
         server.setExecutor(null);
         server.start();
         log.info("HttpServer started on " + server.getAddress().getHostString() +":"+ server.getAddress().getPort());
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    close();
-                } catch (DiscordException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, "Shutdown-thread"));
+        Runtime.getRuntime().addShutdownHook(new Thread(SimpleBot::close, "Shutdown-thread"));
     }
 
     private static SimpleBot login(String token) {
         ClientBuilder builder = new ClientBuilder(); // Creates a new client builder instance
         builder.withToken(token);// Sets the bot token for the client
         builder.withRecommendedShardCount();
+        builder.setDaemon(true);
         IDiscordClient c;
-        try {
-            c = builder.login(); // Builds the IDiscordClient instance and logs it in
+        c = builder.login(); // Builds the IDiscordClient instance and logs it in
             // Creating the bot instance
+        if (c != null) {
             return new SimpleBot(c);
-        } catch (DiscordException e) { // Error occurred logging in
-            e.printStackTrace();
-
+        }else{
+            return null;
         }
-        return null;
     }
 
     private static void configureListeners() {
@@ -91,7 +83,7 @@ public class SimpleBot {
         log.info("Listeners are configured.");
     }
 
-    static HttpServer createHttpServer(){
+    private static HttpServer createHttpServer(){
         HttpServer server =null;
         String host = config.getProperty("hostnameIP","localhost");
         Integer port = Integer.parseInt(config.getProperty("httpPort","22000"));
@@ -115,7 +107,7 @@ public class SimpleBot {
     }
 
 
-    private static void close() throws DiscordException {
+    private static void close() {
         SimpleBot.log.info("Server shut down initiated...");
         SimpleBot.log.info("Saving Guild Configs");
         for(Map.Entry<Long,GuildConfig> entry : SimpleBot.gConfigs.entrySet()){

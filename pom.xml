@@ -7,6 +7,11 @@
     <artifactId>DiscordModules</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <discordToken/>
+        <build.number/>
+    </properties>
     <modules>
         <module>DiscordBot</module>
         <module>DiscordBungee</module>
@@ -38,9 +43,6 @@
         <url>https://github.com/AddstarMC/Discord-Bot</url>
         <tag>HEAD</tag>
     </scm>
-	<properties>
-	        <build.number/>
-	</properties>
     <build>
         <plugins>
             <plugin>
