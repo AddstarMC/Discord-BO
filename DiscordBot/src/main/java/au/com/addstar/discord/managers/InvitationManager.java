@@ -126,7 +126,7 @@ public class InvitationManager {
 
     public static Invitation getInvitation(GuildConfig config, String code){
         Invitation inv = config.getInviteCache().get(code);
-        if (inv.hasExpired())return null;
+        if (inv == null || inv.hasExpired())return null;
         return inv;
     }
     public static Invitation getExpiredInvite(GuildConfig config, String code){
