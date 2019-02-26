@@ -1,8 +1,11 @@
 package au.com.addstar.discord.ulilities;
 
 import au.com.addstar.discord.SimpleBot;
-import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.*;
+import discord4j.core.object.entity.Channel;
+import discord4j.core.object.entity.Message;
+import discord4j.core.object.entity.MessageChannel;
+import discord4j.core.object.entity.User;
+import discord4j.core.object.util.Snowflake;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,53 +17,31 @@ import java.util.UUID;
  */
 public class Utility {
 
-    public  static void sendPrivateMessage(IUser u, String m){
-        try {
-            MessageBuilder builder = new MessageBuilder(SimpleBot.client).withChannel(u.getOrCreatePMChannel()).withContent(m);
-            builder.build();
-        } catch (RateLimitException e) { // RateLimitException thrown. The bot is sending messages too quickly!
-            SimpleBot.log.error("Sending messages too quickly!");
-        } catch (DiscordException e) { // DiscordException thrown. Many possibilities. Use getErrorMessage() to see what went wrong.
-            SimpleBot.log.error(e.getErrorMessage()); // Print the error message sent by Discord
-        } catch (MissingPermissionsException e) { // MissingPermissionsException thrown. The bot doesn't have permission to send the message!
-            SimpleBot.log.error("Missing permissions for channel!");
-
-        }
-
+    public  static void sendPrivateMessage(User u, String m){
+        u.getPrivateChannel().subscribe(privateChannel -> {
+            privateChannel.createMessage(m).subscribe();
+        });
     }
 
     public static void sendChannelMessage(Long announceID, String m){
-        IChannel aChannel = SimpleBot.client.getChannelByID(announceID);
-        MessageBuilder builder = new MessageBuilder(SimpleBot.client).withChannel(aChannel).withContent(m);
-        try {
-            builder.build();
-        } catch (RateLimitException e) { // RateLimitException thrown. The bot is sending messages too quickly!
-            SimpleBot.log.error("Sending messages too quickly!");
-    } catch (DiscordException e) { // DiscordException thrown. Many possibilities. Use getErrorMessage() to see what went wrong.
-        SimpleBot.log.error(e.getErrorMessage()); // Print the error message sent by Discord
-    } catch (MissingPermissionsException e) { // MissingPermissionsException thrown. The bot doesn't have permission to send the message!
-            SimpleBot.log.error("Missing permissions for channel!");
-    }
-    }
-    public static void deleteMessages(IChannel chan,int r){
-            int size = chan.getMessageHistory().size();
-            if(r > size ){
-                chan.bulkDelete();
-                return;
+        SimpleBot.client.getChannelById(Snowflake.of(announceID)).subscribe(channel -> {
+            if(channel instanceof MessageChannel){
+                ((MessageChannel) channel).createMessage(m);
+            } else {
+                SimpleBot.log.info("Channel:" +announceID+ " is not a MessageChannel");
             }
-            MessageHistory history = chan.getMessageHistory(r);
-            history.bulkDelete();
+        });
     }
-
-
-    public static void deleteMessage(IMessage m){
-        try {
-            m.delete();
-        } catch (MissingPermissionsException | RateLimitException | DiscordException e) {
-            e.printStackTrace();
+    public static void deleteMessages(Channel chan,Snowflake r) {
+        if (chan instanceof MessageChannel) {
+            ((MessageChannel) chan).getMessagesAfter(r).subscribe(Message::delete);
+        
         }
     }
-
+    
+    public static void deleteMessage (Message mess){
+                mess.delete();
+        }
 
     public static UUID StringtoUUID(String uuidstring){
         if (uuidstring.length() < 32) {

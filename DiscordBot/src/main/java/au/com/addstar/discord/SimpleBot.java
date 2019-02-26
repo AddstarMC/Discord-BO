@@ -7,10 +7,12 @@ import au.com.addstar.discord.listeners.CommandListener;
 import au.com.addstar.discord.listeners.ManagementListener;
 import au.com.addstar.discord.objects.GuildConfig;
 import com.sun.net.httpserver.HttpServer;
+import discord4j.core.DiscordClient;
+import discord4j.core.DiscordClientBuilder;
+import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sx.blah.discord.api.ClientBuilder;
-import sx.blah.discord.api.IDiscordClient;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -26,14 +28,14 @@ import java.util.Properties;
 public class SimpleBot {
 
     public static SimpleBot instance;
-    public static IDiscordClient client;
+    public static DiscordClient client;
     public static Properties config;
     private static HashMap<Long,GuildConfig> gConfigs;
     static HttpServer server;
     public static final Logger log = LoggerFactory.getLogger(SimpleBot.class);
 
 
-    public SimpleBot(IDiscordClient client) {
+    public SimpleBot(DiscordClient client)  {
         SimpleBot.client = client;
         gConfigs = new HashMap<>();
     }
@@ -46,7 +48,8 @@ public class SimpleBot {
             SimpleBot.log.info("You must edit the config.properties file and add your discord app private token.");
             System.exit(1);
         }
-        instance = login(token);
+        instance = create(token);
+        instance.daemonize();
         if(instance == null){
             SimpleBot.log.info("We could not instantiate a valid Bot....");
             close();
@@ -60,21 +63,34 @@ public class SimpleBot {
         Runtime.getRuntime().addShutdownHook(new Thread(SimpleBot::close, "Shutdown-thread"));
     }
 
-    private static SimpleBot login(String token) {
-        ClientBuilder builder = new ClientBuilder(); // Creates a new client builder instance
-        builder.withToken(token);// Sets the bot token for the client
-        builder.withRecommendedShardCount();
-        builder.setDaemon(true);
-        IDiscordClient c;
-        c = builder.login(); // Builds the IDiscordClient instance and logs it in
-            // Creating the bot instance
+    private static SimpleBot create(String token) {
+        DiscordClientBuilder builder = new DiscordClientBuilder(token);
+        DiscordClient c = builder.build();
         if (c != null) {
             return new SimpleBot(c);
         }else{
             return null;
         }
     }
+    
+    private void daemonize(){
+        Thread thread = new Thread(this.createSimpleBotDaemon());
+        thread.setDaemon(true);
+        thread.start();
+        thread.stop();
+    }
 
+    private Runnable createSimpleBotDaemon(){
+        return new Runnable() {
+            private boolean enabled;
+            @Override
+            public void run() {
+                    Mono m = client.login();
+                    m.block();
+            }
+        };
+        
+    }
     private static void configureListeners() {
         ManagementListener mListen = new ManagementListener();
         CommandListener cListen = new CommandListener();

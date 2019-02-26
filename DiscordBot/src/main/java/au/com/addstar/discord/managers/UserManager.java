@@ -4,19 +4,16 @@ import au.com.addstar.discord.SimpleBot;
 import au.com.addstar.discord.objects.McUser;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import sx.blah.discord.api.IDiscordClient;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IRole;
-import sx.blah.discord.handle.obj.IUser;
-import sx.blah.discord.util.DiscordException;
-import sx.blah.discord.util.MissingPermissionsException;
-import sx.blah.discord.util.RateLimitException;
+import discord4j.core.DiscordClient;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Role;
+import reactor.core.publisher.Mono;
 
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,27 +26,27 @@ public class UserManager {
     private static Gson gsonencoder = new Gson();
     private static Type type = new TypeToken<McUser>(){}.getType();
 
-    public static void initialize(IDiscordClient client){
-        List<IGuild> guilds = client.getGuilds();
-        for (IGuild guild : guilds){
-            List<IUser> users = guild.getUsers();
-            for(IUser user : users){
-                McUser mcUser = loadUserFromFile(user.getLongID());
-                if (mcUser == null){
-                    SimpleBot.log.info("No save exists for User:" + user.getStringID());
-                    mcUser = new McUser(user.getLongID());
-                    mcUser.addUpdateDisplayName(guild.getLongID(),user.getDisplayName(guild));
-                    saveUserToFile(mcUser);
+    public static void initialize(final DiscordClient client){
+        client.getGuilds().map(guild -> {
+            guild.getMembers().map(member -> {
+                McUser user = loadUserFromFile(member.getId().asLong());
+                if (user == null){
+                    SimpleBot.log.info("No save exists for User:" + user.getDisplayName(guild.getId().asLong()));
+                    user = new McUser(member.getId());
+                    user.addUpdateDisplayName(guild.getId().asLong(),user.getDisplayName(guild.getId().asLong()));
+                    saveUserToFile(user);
                 }
-                cacheUser(mcUser);
-            }
-        }
+                cacheUser(user);
+                return user;
+            });
+            return guild;
+        });
     }
 
 
 
-    public static void addGuildtoUser(McUser user, String displayName, IGuild guild) {
-        user.addUpdateDisplayName(guild.getLongID(),displayName);
+    public static void addGuildtoUser(McUser user, String displayName, Guild guild) {
+        user.addUpdateDisplayName(guild.getId().asLong(),displayName);
     }
 
     public static void cacheUser(McUser u) {
@@ -159,43 +156,38 @@ public class UserManager {
 
     }
 
-    public static void setUserNick(IGuild g, IUser u, String nick){
-        try {
-            g.setUserNickname(u,nick);
-        } catch (MissingPermissionsException e) {
-            SimpleBot.log.error(" We dont have permission to set the nick of " + u.getDisplayName(g));
-        } catch (DiscordException | RateLimitException e) {
-            e.printStackTrace();
-        }
+    public static Mono<Void> setUserNick(Member u, String nick) {
+        return u.edit(guildMemberEditSpec -> {
+            guildMemberEditSpec.setNickname(nick);
+        });
+    }
+    
+
+    public static Mono<Member> setRoleforUser(Guild g, Member u, Role r){
+        return u.asMember(g.getId()).map(member -> {
+            member.addRole(r.getId());
+            return member;
+        });
     }
 
-    public static void setRoleforUser(IGuild g, IUser u, IRole r){
-        List<IRole> currroles = g.getRolesForUser(u);
-        currroles.add(r);
-        IRole[] newroles = currroles.toArray(new IRole[0]);
-        try {
-           g.editUserRoles(u,newroles);
-        } catch (MissingPermissionsException e) {
-            SimpleBot.log.error(" We dont have permission to set the role of " + u.getDisplayName(g) + " to " + Arrays.toString(newroles));
-            e.printStackTrace();
-        } catch (RateLimitException | DiscordException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void checkUserDisplayName(McUser user, IGuild guild){
-        String savedName = user.getDisplayName(guild.getLongID());
-        String currName = guild.getUserByID(user.getDiscordID()).getDisplayName(guild);
-        if(savedName != null){
-        if(savedName != currName){
-            SimpleBot.log.info("Discord User: " + user.getDiscordID() + " has updated thier displayName. Resetting");
-            //todo hook back and check for update in MC
-            IUser discordUser = guild.getUserByID(user.getDiscordID());
-            setUserNick(guild,discordUser,savedName);
-            }
-        }else{
-            user.addUpdateDisplayName(guild.getLongID(),currName);
-            saveUser(user);
+    public static void checkUserDisplayName(McUser user, Guild guild){
+        
+        String savedName = user.getDisplayName(guild.getId().asLong());
+        if(savedName == null){
+            guild.getMemberById(user.getId()).
+                    subscribe(member -> {
+                        user.addUpdateDisplayName(guild.getId().asLong(),member.getDisplayName());
+                        saveUser(user);
+                    });
+        } else {
+            guild.getMemberById(user.getId()).
+                    filter(member -> !member.getDisplayName().equals(savedName)).
+                    map(member -> {
+                        SimpleBot.log.info("Discord User: " + user.getDiscordID() + " has updated thier displayName. Resetting");
+                        setUserNick(member, savedName);
+                        return member;
+                    }).
+                    subscribe();
         }
     }
 

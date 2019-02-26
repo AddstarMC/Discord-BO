@@ -1,5 +1,6 @@
 package au.com.addstar.discord.objects;
 
+import discord4j.core.object.util.Snowflake;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -13,6 +14,12 @@ import java.util.UUID;
 public class McUser {
 
     private final Long discordID;
+    
+    public Snowflake getId() {
+        return this.id;
+    }
+    
+    private final Snowflake id;
     private UUID minecraftUUID;
     private Map<Long, String> displayNames;
     private Map<String, String> detail;
@@ -20,8 +27,9 @@ public class McUser {
     public Long getDiscordID() {
         return discordID;
     }
-    public McUser(Long discordID) {
-        this.discordID = discordID;
+    public McUser(Snowflake discordID) {
+        id = discordID;
+        this.discordID = discordID.asLong();
         displayNames = new HashMap<>();
     }
 

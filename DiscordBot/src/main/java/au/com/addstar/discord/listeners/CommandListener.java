@@ -7,6 +7,11 @@ import au.com.addstar.discord.objects.GuildConfig;
 import au.com.addstar.discord.objects.Invitation;
 import au.com.addstar.discord.objects.McUser;
 import au.com.addstar.discord.ulilities.Utility;
+import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.event.domain.message.MessageEvent;
+import discord4j.core.object.entity.*;
+import discord4j.core.object.util.Permission;
+import discord4j.core.object.util.Snowflake;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
@@ -24,251 +29,254 @@ import static au.com.addstar.discord.ulilities.Utility.deleteMessages;
  * Created by benjamincharlton on 9/12/2016.
  */
 public class CommandListener {
+    
+    public CommandListener(SimpleBot bot) {
+        bot.client.getEventDispatcher().on(MessageCreateEvent.class).subscribe(messageEvent -> {
+            commandListener(messageEvent);
+        })
+        
+    }
+    
+    public void commandListener(MessageCreateEvent event) {
 
-    @EventSubscriber
-    public void commandListener(MessageReceivedEvent event) {
-
-        IMessage m = event.getMessage();
-        IUser u = m.getAuthor();
-        if ((m.getChannel().isPrivate())) {
-            return;//no handling PMs here
-        }
-        IGuild g = m.getGuild();
-        GuildConfig config = SimpleBot.instance.getGuildConfig(g.getLongID());
-        String prefix = config.getPrefix();
-        String message = m.getContent();
-        if (!message.startsWith(prefix)) {
-            return;//no prefix dont handle it
-        }
-        message = message.substring(prefix.length());
-        String[] mSplit = message.split("\\s+");
-        boolean admin = false;
-        boolean moderator = false;
-        List<IRole> roles = u.getRolesForGuild(g);
-        for (IRole r : roles) {
-            EnumSet<Permissions> perms = r.getPermissions();
-            if (perms.contains(Permissions.ADMINISTRATOR)) {
-                admin = true;
+        Message m = event.getMessage();
+        Member u = event.getMember().get();
+        event.getMessage().getChannel().filter(messageChannel -> {
+            return messageChannel.getType() == Channel.Type.GUILD_TEXT;
+        }).subscribe(messageChannel -> {
+            String fullMessage = m.getContent().get();
+            final GuildConfig config = SimpleBot.instance.getGuildConfig(((GuildChannel)messageChannel).getGuildId().asLong());
+            String prefix = config.getPrefix();
+            if (!fullMessage.startsWith(prefix)) {
+                return;//no prefix dont handle it
             }
-            if (perms.contains(Permissions.KICK)) {
-                moderator = true;
-            }
-        }
-        if (admin) { //process admin commands
-            switch (mSplit[0].toLowerCase()) {
-                case "set":
-                    if (mSplit.length > 1) {
-                        switch (mSplit[1].toLowerCase()) {
-                            case "prefix":
-                                String oldPrefix = config.getPrefix();
-                                if (mSplit.length > 2) {
-                                    String newPrefix = mSplit[2];
-                                    config.setPrefix(newPrefix);
-                                    config.saveConfig();
-                                    Utility.sendPrivateMessage(u, "Prefix updated Old: " + oldPrefix + "New: " + config.getPrefix());
-                                } else {
-                                    Utility.sendPrivateMessage(u, "Current Prefix is : " + oldPrefix);
-                                }
-                                return;
-                            case "welcomemessage":
-                                String oldMessage = config.getWelcomeMessage();
-                                if (mSplit.length > 2) {
-                                    String newMessage = message.substring(mSplit[0].length() + mSplit[1].length() + 2);
-                                    config.setWelcomeMessage(newMessage);
-                                    config.saveConfig();
-                                    Utility.sendPrivateMessage(u, "Welcome message updated.  Old: " + oldMessage + "New: " + config.getWelcomeMessage());
-                                } else {
-                                    Utility.sendPrivateMessage(u, "Current Message is : " + oldMessage);
-                                }
-                                return;
-                            case "announcechannelid":
-
-                                IChannel oldChannel = SimpleBot.client.getChannelByID(config.getAnnounceChannelID());
-
-                                if (mSplit.length > 2) {
-                                    Long newAnnounceID = Long.parseLong(mSplit[2]);
-                                    IChannel newChannel = SimpleBot.client.getChannelByID(newAnnounceID);
-                                    if (newChannel == null) {
-                                        if (oldChannel != null) {
+            final String message = fullMessage.substring(prefix.length());
+            final String[] mSplit = message.split("\\s+");
+            u.getRoles().map(role -> {
+                if(role.getPermissions().contains(Permission.ADMINISTRATOR)){
+                    switch (mSplit[0].toLowerCase()) {
+                        case "set":
+                            if (mSplit.length > 1) {
+                                switch (mSplit[1].toLowerCase()) {
+                                    case "prefix":
+                                        String oldPrefix = config.getPrefix();
+                                        if (mSplit.length > 2) {
+                                            String newPrefix = mSplit[2];
+                                            config.setPrefix(newPrefix);
+                                            config.saveConfig();
+                                            Utility.sendPrivateMessage(u, "Prefix updated Old: " + oldPrefix + "New: " + config.getPrefix());
+                                        } else {
+                                            Utility.sendPrivateMessage(u, "Current Prefix is : " + oldPrefix);
+                                        }
+                                        return;
+                                    case "welcomemessage":
+                                        String oldMessage = config.getWelcomeMessage();
+                                        if (mSplit.length > 2) {
+                                            String newMessage = message.substring(mSplit[0].length() + mSplit[1].length() + 2);
+                                            config.setWelcomeMessage(newMessage);
+                                            config.saveConfig();
+                                            Utility.sendPrivateMessage(u, "Welcome message updated.  Old: " + oldMessage + "New: " + config.getWelcomeMessage());
+                                        } else {
+                                            Utility.sendPrivateMessage(u, "Current Message is : " + oldMessage);
+                                        }
+                                        return;
+                                    case "announcechannelid":
+                        
+                                        Channel oldChannel = SimpleBot.client.getChannelById(Snowflake.of(config.getAnnounceChannelID())).block();
+                        
+                                        if (mSplit.length > 2) {
+                                            Long newAnnounceID = Long.parseLong(mSplit[2]);
+                                            Channel newChannel = SimpleBot.client.getChannelById(Snowflake.of(newAnnounceID))
+                                                    .on
+                                                    .subscribe(channel -> {
+                                                    
+                                                    
+                                                    })
+                                            );
+                                            if (newChannel == null) {
+                                                if (oldChannel != null) {
+                                                    Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldChannel.getName());
+                                                }
+                                                Utility.sendPrivateMessage(u, newAnnounceID + " could not find a channel with that ID");
+                                                return;
+                                            }
+                                            config.setAnnounceChannelID(newAnnounceID);
+                                            config.saveConfig();
+                                            if (oldChannel == null) {
+                                                Utility.sendPrivateMessage(u, "Channel updated New: " + newChannel.getName());
+                                            } else {
+                                                Utility.sendPrivateMessage(u, "Channel updated Old: " + oldChannel.getName() + "New: " + newChannel.getName());
+                                            }
+                            
+                                        } else {
                                             Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldChannel.getName());
                                         }
-                                        Utility.sendPrivateMessage(u, newAnnounceID + " could not find a channel with that ID");
                                         return;
-                                    }
-                                    config.setAnnounceChannelID(newAnnounceID);
-                                    config.saveConfig();
-                                    if (oldChannel == null) {
-                                        Utility.sendPrivateMessage(u, "Channel updated New: " + newChannel.getName());
-                                    } else {
-                                        Utility.sendPrivateMessage(u, "Channel updated Old: " + oldChannel.getName() + "New: " + newChannel.getName());
-                                    }
-
-                                } else {
-                                    Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldChannel.getName());
-                                }
-                                return;
-                            case "modchannelid":
-
-                                IChannel oldMChannel = SimpleBot.client.getChannelByID(config.getModChannelID());
-
-                                if (mSplit.length > 2) {
-                                    Long newModChannelID = Long.parseLong(mSplit[2]);
-                                    IChannel newChannel = SimpleBot.client.getChannelByID(newModChannelID);
-                                    if (newChannel == null) {
-                                        if (oldMChannel != null) {
-                                            Utility.sendPrivateMessage(u, "Current Moderation Channel is : " + oldMChannel.getName());
+                                    case "modchannelid":
+                        
+                                        IChannel oldMChannel = SimpleBot.client.getChannelByID(config.getModChannelID());
+                        
+                                        if (mSplit.length > 2) {
+                                            Long newModChannelID = Long.parseLong(mSplit[2]);
+                                            IChannel newChannel = SimpleBot.client.getChannelByID(newModChannelID);
+                                            if (newChannel == null) {
+                                                if (oldMChannel != null) {
+                                                    Utility.sendPrivateMessage(u, "Current Moderation Channel is : " + oldMChannel.getName());
+                                                }
+                                                Utility.sendPrivateMessage(u, newModChannelID + " could not find a channel with that ID");
+                                                return;
+                                            }
+                                            config.setModChannelID(newModChannelID);
+                                            config.saveConfig();
+                                            if (oldMChannel == null) {
+                                                Utility.sendPrivateMessage(u, "Channel updated New: " + newChannel.getName());
+                                            } else {
+                                                Utility.sendPrivateMessage(u, "Channel updated Old: " + oldMChannel.getName() + "New: " + newChannel.getName());
+                                            }
+                            
+                                        } else {
+                                            Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldMChannel.getName());
                                         }
-                                        Utility.sendPrivateMessage(u, newModChannelID + " could not find a channel with that ID");
                                         return;
-                                    }
-                                    config.setModChannelID(newModChannelID);
-                                    config.saveConfig();
-                                    if (oldMChannel == null) {
-                                        Utility.sendPrivateMessage(u, "Channel updated New: " + newChannel.getName());
-                                    } else {
-                                        Utility.sendPrivateMessage(u, "Channel updated Old: " + oldMChannel.getName() + "New: " + newChannel.getName());
-                                    }
-
-                                } else {
-                                    Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldMChannel.getName());
+                                    case "expirytime":
+                                        if (mSplit.length > 2) {
+                                            int exp = Integer.parseInt(mSplit[2]);
+                                            config.setExpiryTime(exp);
+                                        }
+                                        break ;
+                                    case "reportstatus":
+                                        Boolean report = config.isReportStatusChange();
+                                        if (mSplit.length > 2) {
+                                            String newReport = mSplit[2];
+                                            Boolean nR = Boolean.getBoolean(newReport);
+                                            config.setReportStatusChange(nR);
+                                            config.saveConfig();
+                                            Utility.sendPrivateMessage(u, "ReportingStatus updated Old: " + report + "New: " + nR);
+                                        } else {
+                                            Utility.sendPrivateMessage(u, "Current ReportingStatus is : " + report);
+                                        }
+                                        return;
+                                    case "help":
+                                    default:
+                                        sendAdminHelp(g, u, prefix);
+                                        return;
                                 }
-                                return;
-                            case "expirytime":
-                                if (mSplit.length > 2) {
-                                    int exp = Integer.parseInt(mSplit[2]);
-                                    config.setExpiryTime(exp);
-                                }
-                                break ;
-                            case "reportstatus":
-                                Boolean report = config.isReportStatusChange();
-                                if (mSplit.length > 2) {
-                                    String newReport = mSplit[2];
-                                    Boolean nR = Boolean.getBoolean(newReport);
-                                    config.setReportStatusChange(nR);
-                                    config.saveConfig();
-                                    Utility.sendPrivateMessage(u, "ReportingStatus updated Old: " + report + "New: " + nR);
-                                } else {
-                                    Utility.sendPrivateMessage(u, "Current ReportingStatus is : " + report);
-                                }
-                                return;
-                            case "help":
-                            default:
+                            } else {
                                 sendAdminHelp(g, u, prefix);
                                 return;
-                        }
-                    } else {
-                        sendAdminHelp(g, u, prefix);
-                        return;
+                            }
+        
+                        case "reloadguildconfig":
+                            GuildConfig c = SimpleBot.instance.getGuildConfig(m.getGuild().getLongID());
+                            c.loadConfig();
+                            Utility.sendPrivateMessage(u, "Configurations reloaded");
+                            return;
+                        case "discorbotexit":
+                            SimpleBot.exit();
+                        case "help":
+                            sendAdminHelp(g, u, prefix);
+                            break;
+                        default:
                     }
-
-                case "reloadguildconfig":
-                    GuildConfig c = SimpleBot.instance.getGuildConfig(m.getGuild().getLongID());
-                    c.loadConfig();
-                    Utility.sendPrivateMessage(u, "Configurations reloaded");
-                    return;
-                case "discorbotexit":
-                    SimpleBot.exit();
-                case "help":
-                    sendAdminHelp(g, u, prefix);
-                    break;
-                default:
-            }
-
-        }
-        if (moderator) { //moderation commands
-            switch (mSplit[0].toLowerCase()) {
-                case "warn":
-                    if (mSplit.length > 1) {
-                        String warned = mSplit[1];
-                        List<IUser> users = m.getChannel().getGuild().getUsersByName(warned);
-                        if (users.size() > 1) {
-                            //todo  more than 1 user by that name
-                            Utility.sendPrivateMessage(u, "to many users with that name cant warn");
-                        }
-
-                    }
-                    return;
-                case "purge":
-                    int i = 1;
-                    if (mSplit.length > 1) {
-                        String num = mSplit[1];
-                        i = Integer.parseInt(num);
-                    }
-                    if (i < 1) i = 1;
-                    deleteMessages(m.getChannel(), i);
-                    Utility.sendPrivateMessage(u,i+" messages deleted from " + m.getChannel().getName());
-                    SimpleBot.log.info(u.getName() + " deleted " + i + " messages from " + m.getChannel().getName());
-                    deleteMessage(m);
-                    return;
-                case "listpendinginvites":
-                    List<Invitation> invites = InvitationManager.getPendingInvites(config);
-                    if (invites != null && invites.size() > 0) {
-                        for (Invitation inv : invites) {
-                            Long time = inv.getExpiryTime();
-                            Utility.sendPrivateMessage(u, "Invititation for " + inv.getUserName() + " Code: " + inv.getInviteCode() + "Expiry: " + Utility.getDate(time));
-                        }
-                    } else {
-                        Utility.sendPrivateMessage(u, "No invites found");
-                    }
-                    break;
-                case "help":
-                    sendModeraterHelp(g,u,prefix);
-                default:
-
-            }
-
-        }
-        switch (mSplit[0].toLowerCase()) {
-            case "register":
-                Utility.sendPrivateMessage(u, "Processing Registration....");
-                if (mSplit.length != 2) {
-                    Utility.sendPrivateMessage(u, "You must add the invite code. Please copy the command you recieved.");
-                    break;
-                } else {
-                    String code = mSplit[1];
-                    Invitation invite = InvitationManager.getInvitation(config, code);
-                    if (invite == null) {
-                        invite = InvitationManager.getExpiredInvite(config, code);
-                        SimpleBot.log.info(u.getName()+ " using expired invite code.");
-                    }
-                    if(invite == null){
-                        Utility.sendPrivateMessage(u, "Invitation Code not found");
-                    } else {
-                        UserManager.setUserNick(g, u, invite.getUserName());
-                        SimpleBot.log.info(u.getName() + " has agreed to the rules. Nicknamed: " + invite.getUserName());
-                        Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has agreed to the rules.  Welcome to " + g.getName());
-                        List<IRole> userroles = g.getRolesByName("member");
-                        if (userroles.size() > 1) {
-                            SimpleBot.log.warn(" More than 1 role found for \"member\"");
-                        }
-                        if (userroles.size() == 0) {
-                            SimpleBot.log.warn(" No role found for \"member\"");
-                        }
-                        if(userroles.size() == 1){
-                            UserManager.setRoleforUser(g, u, userroles.get(0));
-                            SimpleBot.log.info(u.getName() + " applied Role: "+userroles.get(0).getName());
-                        }
-                        Utility.sendPrivateMessage(u,"Registration complete.");
-                        McUser user = UserManager.loadUser(u.getLongID());
-                        if (user == null){
-                            SimpleBot.log.info("MCUSER was null - should have been created on join??.");
-                            user = new McUser(u.getLongID());
-                        }
-                        user.addUpdateDisplayName(g.getLongID(),invite.getUserName());
-                        user.setMinecraftUUID(invite.getUuid());
-                        UserManager.saveUser(user);
-                        SimpleBot.log.info("Registration complete.");
-                        InvitationManager.removeInvitation(config, invite.getInviteCode());
+                
+                }
+                if(role.getPermissions().contains(Permission.KICK_MEMBERS)){
+                    switch (mSplit[0].toLowerCase()) {
+                        case "warn":
+                            if (mSplit.length > 1) {
+                                String warned = mSplit[1];
+                                List<IUser> users = m.getChannel().getGuild().getUsersByName(warned);
+                                if (users.size() > 1) {
+                                    //todo  more than 1 user by that name
+                                    Utility.sendPrivateMessage(u, "to many users with that name cant warn");
+                                }
+                
+                            }
+                            return;
+                        case "purge":
+                            int i = 1;
+                            if (mSplit.length > 1) {
+                                String num = mSplit[1];
+                                i = Integer.parseInt(num);
+                            }
+                            if (i < 1) i = 1;
+                            deleteMessages(m.getChannel(), i);
+                            Utility.sendPrivateMessage(u,i+" messages deleted from " + m.getChannel().getName());
+                            SimpleBot.log.info(u.getName() + " deleted " + i + " messages from " + m.getChannel().getName());
+                            deleteMessage(m);
+                            return;
+                        case "listpendinginvites":
+                            List<Invitation> invites = InvitationManager.getPendingInvites(config);
+                            if (invites != null && invites.size() > 0) {
+                                for (Invitation inv : invites) {
+                                    Long time = inv.getExpiryTime();
+                                    Utility.sendPrivateMessage(u, "Invititation for " + inv.getUserName() + " Code: " + inv.getInviteCode() + "Expiry: " + Utility.getDate(time));
+                                }
+                            } else {
+                                Utility.sendPrivateMessage(u, "No invites found");
+                            }
+                            break;
+                        case "help":
+                            sendModeraterHelp(g,u,prefix);
+                        default:
+        
                     }
                 }
-                deleteMessage(m);
-                return;
-            case "help":
-                sendUserHelp(g, u, prefix);
-                break;
-            default:
-
-        }
+                switch (mSplit[0].toLowerCase()) {
+                    case "register":
+                        Utility.sendPrivateMessage(u, "Processing Registration....");
+                        if (mSplit.length != 2) {
+                            Utility.sendPrivateMessage(u, "You must add the invite code. Please copy the command you recieved.");
+                            break;
+                        } else {
+                            String code = mSplit[1];
+                            Invitation invite = InvitationManager.getInvitation(config, code);
+                            if (invite == null) {
+                                invite = InvitationManager.getExpiredInvite(config, code);
+                                SimpleBot.log.info(u.getName()+ " using expired invite code.");
+                            }
+                            if(invite == null){
+                                Utility.sendPrivateMessage(u, "Invitation Code not found");
+                            } else {
+                                UserManager.setUserNick(g, u, invite.getUserName());
+                                SimpleBot.log.info(u.getName() + " has agreed to the rules. Nicknamed: " + invite.getUserName());
+                                Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has agreed to the rules.  Welcome to " + g.getName());
+                                List<IRole> userroles = g.getRolesByName("member");
+                                if (userroles.size() > 1) {
+                                    SimpleBot.log.warn(" More than 1 role found for \"member\"");
+                                }
+                                if (userroles.size() == 0) {
+                                    SimpleBot.log.warn(" No role found for \"member\"");
+                                }
+                                if(userroles.size() == 1){
+                                    UserManager.setRoleforUser(g, u, userroles.get(0));
+                                    SimpleBot.log.info(u.getName() + " applied Role: "+userroles.get(0).getName());
+                                }
+                                Utility.sendPrivateMessage(u,"Registration complete.");
+                                McUser user = UserManager.loadUser(u.getLongID());
+                                if (user == null){
+                                    SimpleBot.log.info("MCUSER was null - should have been created on join??.");
+                                    user = new McUser(u.getLongID());
+                                }
+                                user.addUpdateDisplayName(g.getLongID(),invite.getUserName());
+                                user.setMinecraftUUID(invite.getUuid());
+                                UserManager.saveUser(user);
+                                SimpleBot.log.info("Registration complete.");
+                                InvitationManager.removeInvitation(config, invite.getInviteCode());
+                            }
+                        }
+                        deleteMessage(m);
+                        return;
+                    case "help":
+                        sendUserHelp(g, u, prefix);
+                        break;
+                    default:
+        
+                }
+            }).subscribe();
+            
+        });
+        
 
     }
 

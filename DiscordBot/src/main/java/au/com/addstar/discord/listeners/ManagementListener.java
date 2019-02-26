@@ -5,19 +5,17 @@ import au.com.addstar.discord.managers.UserManager;
 import au.com.addstar.discord.objects.GuildConfig;
 import au.com.addstar.discord.objects.McUser;
 import au.com.addstar.discord.ulilities.Utility;
-import sx.blah.discord.api.IDiscordClient;
-import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.ReadyEvent;
-import sx.blah.discord.handle.impl.events.guild.member.UserLeaveEvent;
-import sx.blah.discord.handle.impl.events.guild.member.UserJoinEvent;
-import sx.blah.discord.handle.impl.events.user.PresenceUpdateEvent;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IPresence;
-import sx.blah.discord.handle.obj.IUser;
+import discord4j.core.DiscordClient;
+import discord4j.core.event.domain.PresenceUpdateEvent;
+import discord4j.core.event.domain.guild.MemberJoinEvent;
+import discord4j.core.event.domain.guild.MemberLeaveEvent;
+import discord4j.core.event.domain.lifecycle.ReadyEvent;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.MessageChannel;
+import discord4j.core.object.util.Snowflake;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -26,97 +24,103 @@ import java.util.Map;
 public class ManagementListener {
 
     SimpleBot bot =  SimpleBot.instance;
-
-    @EventSubscriber
+    
+    public ManagementListener(final SimpleBot bot) {
+        DiscordClient client = bot.client;
+        client.getEventDispatcher().
+                on(ReadyEvent.class)
+                .subscribe(readyEvent -> {onReadyEvent(readyEvent);
+                });
+        client.getEventDispatcher().on(MemberJoinEvent.class)
+                .subscribe(memberJoinEvent -> {
+                    onJoinEvent(memberJoinEvent);
+                });
+        client.getEventDispatcher().on(MemberLeaveEvent.class)
+                .subscribe(memberLeaveEvent -> {
+                    onLeaveEvent(memberLeaveEvent);
+                });
+        client.getEventDispatcher().on(PresenceUpdateEvent.class).subscribe(
+                presenceUpdateEvent -> {
+                    onUserPresenceChange(presenceUpdateEvent);
+                });
+    }
+    
+    
     public void onReadyEvent(ReadyEvent event){
-        IDiscordClient client = event.getClient(); // Gets the client from the event object
-        for (IGuild guild : client.getGuilds()){
-            Long id = guild.getLongID();
-            GuildConfig config  =  new GuildConfig(id);
-            bot.addGuild(id, config);
+        Set<ReadyEvent.Guild> guilds = event.getGuilds();
+        for(ReadyEvent.Guild g:guilds) {
+                Long id = g.getId().asLong();
+                GuildConfig config  =  new GuildConfig(id);
+                bot.addGuild(id, config);
         }
+        
         UserManager.initialize(SimpleBot.client);
     }
 
-    @EventSubscriber
-    public void onJoinEvent(UserJoinEvent event){
-        IUser u = event.getUser();
-        IGuild g = event.getGuild();
-        GuildConfig config = bot.getGuildConfig(g.getLongID());
-        McUser user = UserManager.loadUserFromFile(u.getLongID());
+    public void onJoinEvent(MemberJoinEvent event){
+        Member u = event.getMember();
+        Guild g = event.getGuild().block();
+        GuildConfig config = bot.getGuildConfig(g.getId().asLong());
+        McUser user = UserManager.loadUserFromFile(u.getId().asLong());
         if(user == null){
-            user = new McUser(u.getLongID());
+            user = new McUser(u.getId());
             UserManager.cacheUser(user);
         }
         Utility.sendPrivateMessage(u, config.getWelcomeMessage());
-        Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has joined " + g.getName());
+        Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName() + " has joined " + g.getName());
     }
 
-    public void onLeaveEvent(UserLeaveEvent e){
-        IUser u = e.getUser();
-        IGuild g = e.getGuild();
-        GuildConfig config = bot.getGuildConfig(g.getLongID());
-        Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName(g) + " has left  " + g.getName());
+    public void onLeaveEvent(MemberLeaveEvent e){
+        Member u = e.getMember().get();
+        Guild g = e.getGuild().block();
+        GuildConfig config = bot.getGuildConfig(g.getId().asLong());
+        Utility.sendChannelMessage(config.getAnnounceChannelID(), u.getDisplayName() + " has left  " + g.getName());
     }
-
-
-    @EventSubscriber
+    
     public void onUserPresenceChange(PresenceUpdateEvent e){
-        IPresence p = e.getNewPresence();
-        IUser u = e.getUser();
-        McUser user = UserManager.loadUser(u.getLongID());
-        List<IGuild> userGuilds = new ArrayList<>();
-        if(user != null){
-            for(Map.Entry<Long, String> entry : user.getDisplayNames().entrySet()){
-                IGuild guild = e.getClient().getGuildByID(entry.getKey());
-                if (guild!=null)userGuilds.add(guild);
-            }
-        }else{
-            SimpleBot.log.info("User : " + u.getName() + "has been cached with no mcUuid you need to run an update on that user.");
-            user = new McUser(u.getLongID());
-            List<IGuild> guilds = e.getClient().getGuilds();
-            for(IGuild g : guilds){
-            if(g.getUserByID(u.getLongID())!=null){
-                userGuilds.add(g);
-                UserManager.checkUserDisplayName(user,g);
-            }
-            UserManager.saveUser(user);
-        }
-        }
-        String message = "";
-        switch(p.getStatus()){
-            case ONLINE:
-                message = " has come online.";
-                break;
-            case IDLE:
-                message = " has changed to idle";
-                break;
-            case DND:
-                message = " has asked not to be disturbed";
-                break;
-            case OFFLINE:
-                message = " is now offline,";
-                break;
-            default:
-                message = null;
-        }
-        if(message != null) {
-            for (IGuild g : userGuilds) {
-                GuildConfig config = bot.getGuildConfig(g.getLongID());
-                Long channelID = config.getModChannelID();
-                Boolean report = config.isReportStatusChange();
-                if (channelID != null && channelID > 0 && report) {
-                    Utility.sendChannelMessage(channelID, u.getDisplayName(g) + message);
-                } else {
-                    SimpleBot.log.info(g.getName() + ": " + u.getDisplayName(g) + message);
-                }
-            }
+        e.getMember().subscribe(member -> {
+                member.getGuild().subscribe( guild -> {
+                    McUser user = UserManager.loadUserFromFile(member.getId().asLong());
+                    if (user != null) {
+                        String displayName = user.getDisplayName(guild.getId().asLong());
+                        if(displayName == null) {
+                        
+                        }
+                        GuildConfig config = bot.getGuildConfig(guild.getId().asLong());
+                        if (config.isReportStatusChange()) {
+                            String message;
+                            switch (e.getCurrent().getStatus()) {
+                                case ONLINE:
+                                    message = " has come online.";
+                                    break;
+                                case IDLE:
+                                    message = " has changed to idle";
+                                    break;
+                                case DO_NOT_DISTURB:
+                                    message = " has asked not to be disturbed";
+                                    break;
+                                case OFFLINE:
+                                    message = " is now offline,";
+                                    break;
+                                default:
+                                    message = null;
+                            }
+                            Long channelID = config.getModChannelID();
+                            bot.client.getChannelById(Snowflake.of(channelID)).subscribe(channel -> {
+                                if (channel instanceof MessageChannel) {
+                                    SimpleBot.log.info(guild.getName() + ": " + member.getDisplayName() + message);
+                                    ((MessageChannel) channel).createMessage(member.getDisplayName() + ' ' + message).subscribe();
+                                }
+                            });
+                        }
+                    } else {
+                        SimpleBot.log.info("Unknown User on Guild Channel: "+guild.getName());
+                        user = new McUser(member.getId());
+                        UserManager.checkUserDisplayName(user, guild);
+                        UserManager.saveUser(user);
+                    }
+                });
+
+            });
         }
     }
-
-
-
-
-
-
-}
