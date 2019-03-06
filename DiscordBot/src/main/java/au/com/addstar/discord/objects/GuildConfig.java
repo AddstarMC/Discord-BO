@@ -2,8 +2,6 @@ package au.com.addstar.discord.objects;
 
 import au.com.addstar.discord.SimpleBot;
 import au.com.addstar.discord.managers.InvitationManager;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jetty.util.StringUtil;
 
 import java.io.*;
 import java.util.*;

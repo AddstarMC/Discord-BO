@@ -1,11 +1,9 @@
 package au.com.addstar.discord.ulilities;
 
 import au.com.addstar.discord.SimpleBot;
-import discord4j.core.object.entity.Channel;
-import discord4j.core.object.entity.Message;
-import discord4j.core.object.entity.MessageChannel;
-import discord4j.core.object.entity.User;
+import discord4j.core.object.entity.*;
 import discord4j.core.object.util.Snowflake;
+import reactor.core.publisher.Mono;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -17,12 +15,16 @@ import java.util.UUID;
  */
 public class Utility {
 
-    public  static void sendPrivateMessage(User u, String m){
-        u.getPrivateChannel().subscribe(privateChannel -> {
-            privateChannel.createMessage(m).subscribe();
-        });
+    public  static Mono<Message> sendPrivateMessage(Member target, String m){
+        return target.getPrivateChannel().
+                flatMap(privateChannel ->
+                            privateChannel.createMessage(m));
     }
-
+    public  static Mono<Message> sendPrivateMessage(Mono<Member> target, String m){
+        return target.flatMap(Member::getPrivateChannel).
+                flatMap(privateChannel ->
+                        privateChannel.createMessage(m));
+    }
     public static void sendChannelMessage(Long announceID, String m){
         SimpleBot.client.getChannelById(Snowflake.of(announceID)).subscribe(channel -> {
             if(channel instanceof MessageChannel){

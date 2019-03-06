@@ -156,9 +156,13 @@ public class UserManager {
 
     }
 
-    public static Mono<Void> setUserNick(Member u, String nick) {
+    public static Mono<Boolean> setUserNick(Member u, String nick) {
         return u.edit(guildMemberEditSpec -> {
             guildMemberEditSpec.setNickname(nick);
+        }).doOnError(v -> {
+            Mono<Boolean> m = Mono.just(false);
+        }).map(v -> {
+            Mono<Boolean> m = Mono.just(true);
         });
     }
     
