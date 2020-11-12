@@ -161,7 +161,7 @@ public class UserManager {
             guildMemberEditSpec.setNickname(nick);
         });
     }
-    
+
 
     public static Mono<Member> setRoleforUser(Guild g, Member u, Role r){
         return u.asMember(g.getId()).map(member -> {
@@ -171,7 +171,7 @@ public class UserManager {
     }
 
     public static void checkUserDisplayName(McUser user, Guild guild){
-        
+
         String savedName = user.getDisplayName(guild.getId().asLong());
         if(savedName == null){
             guild.getMemberById(user.getId()).

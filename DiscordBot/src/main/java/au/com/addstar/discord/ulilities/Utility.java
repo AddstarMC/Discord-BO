@@ -1,11 +1,11 @@
 package au.com.addstar.discord.ulilities;
 
 import au.com.addstar.discord.SimpleBot;
-import discord4j.core.object.entity.Channel;
+import discord4j.common.util.Snowflake;
 import discord4j.core.object.entity.Message;
-import discord4j.core.object.entity.MessageChannel;
 import discord4j.core.object.entity.User;
-import discord4j.core.object.util.Snowflake;
+import discord4j.core.object.entity.channel.MessageChannel;
+import discord4j.rest.entity.RestChannel;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,18 +24,13 @@ public class Utility {
     }
 
     public static void sendChannelMessage(Long announceID, String m){
-        SimpleBot.client.getChannelById(Snowflake.of(announceID)).subscribe(channel -> {
-            if(channel instanceof MessageChannel){
-                ((MessageChannel) channel).createMessage(m);
-            } else {
-                SimpleBot.log.info("Channel:" +announceID+ " is not a MessageChannel");
-            }
-        });
+        SimpleBot.client.getChannelById(Snowflake.of(announceID))
+                .createMessage(m);
     }
-    public static void deleteMessages(Channel chan,Snowflake r) {
+
+    public static void deleteMessages(RestChannel chan, Snowflake r) {
         if (chan instanceof MessageChannel) {
             ((MessageChannel) chan).getMessagesAfter(r).subscribe(Message::delete);
-        
         }
     }
     

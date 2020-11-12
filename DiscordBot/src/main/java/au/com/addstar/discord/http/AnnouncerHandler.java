@@ -7,10 +7,11 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import org.apache.commons.io.IOUtils;
+import discord4j.discordjson.json.UserGuildData;
+import discord4j.rest.entity.RestGuild;
 import org.apache.http.HttpStatus;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IGuild;
+import sun.misc.IOUtils;
+
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,7 +62,7 @@ public class AnnouncerHandler implements HttpHandler {
             if (request != null) {
                 message = request.get("message");
             }
-            IGuild guild = Utilities.getGuildbyName(path[2]);
+            RestGuild guild = Utilities.getGuildByID(Long.parseLong(path[2]));
             IChannel channel = Utilities.getChannelbyName(guild, path[3]);
             Utility.sendChannelMessage(channel.getLongID(),message);
             SimpleBot.log.info("Message recieved on Announcer: Guild: " + path[2] + " Channel:" + path[3] + "Message: " + message);

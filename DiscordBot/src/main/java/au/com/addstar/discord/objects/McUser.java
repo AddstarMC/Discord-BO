@@ -1,7 +1,6 @@
 package au.com.addstar.discord.objects;
 
-import discord4j.core.object.util.Snowflake;
-import org.jetbrains.annotations.Nullable;
+import discord4j.common.util.Snowflake;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -7,18 +7,32 @@ import au.com.addstar.discord.objects.GuildConfig;
 import au.com.addstar.discord.objects.Invitation;
 import au.com.addstar.discord.objects.McUser;
 import au.com.addstar.discord.ulilities.Utility;
+import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.EventDispatcher;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.event.domain.message.MessageEvent;
 import discord4j.core.object.entity.*;
-import discord4j.core.object.util.Permission;
-import discord4j.core.object.util.Snowflake;
-import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
-import sx.blah.discord.handle.obj.*;
-import sx.blah.discord.util.MessageBuilder.Styles;
 
-import java.util.EnumSet;
+import discord4j.core.object.entity.channel.Channel;
+import discord4j.core.object.entity.channel.GuildChannel;
+import discord4j.core.object.entity.channel.MessageChannel;
+import discord4j.discordjson.json.ChannelData;
+import discord4j.rest.entity.RestChannel;
+import discord4j.rest.util.Permission;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.SynchronousSink;
+
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static au.com.addstar.discord.ulilities.MessageFormatter.addStyle;
 import static au.com.addstar.discord.ulilities.Utility.deleteMessage;
@@ -30,21 +44,76 @@ import static au.com.addstar.discord.ulilities.Utility.deleteMessages;
  */
 public class CommandListener {
     
-    public CommandListener(SimpleBot bot) {
-        bot.client.getEventDispatcher().on(MessageCreateEvent.class).subscribe(messageEvent -> {
-            commandListener(messageEvent);
-        })
-        
+    public CommandListener() {
     }
-    
-    public void commandListener(MessageCreateEvent event) {
 
+    public static void commandListener(MessageCreateEvent messageCreateEvent) {
+        final CompletableFuture<Message> message = new CompletableFuture<>();
+        final CompletableFuture<User> user = new CompletableFuture<>();
+        message.complete(messageCreateEvent.getMessage());
+        messageCreateEvent.getMember().ifPresent(user::complete);
+        Mono
+              .just(messageCreateEvent).flatMap(new Function<MessageCreateEvent, Mono<MessageChannel>>() {
+            @Override
+            public Mono<MessageChannel> apply(MessageCreateEvent messageCreateEvent) {
+                return messageCreateEvent.getMessage().getChannel();
+            }
+        })
+              .filter(new Predicate<MessageChannel>() {
+                          @Override
+                          public boolean test(MessageChannel channel) {
+                              return channel.getType() == Channel.Type.GUILD_TEXT;
+                          }
+                      })
+              .map(new Function<MessageChannel, Message>() {
+                          @Override
+                          public Message apply(MessageChannel channel) {
+                              return  message.getNow(null);
+                          }
+                      })
+              .handle(new BiConsumer<Message, SynchronousSink<? extends Object>>() {
+                    @Override
+                    public void accept(Message message, SynchronousSink<?> synchronousSink) {
+
+                    }
+                })
+                      .flatMap(new Function<MessageChannel, Publisher<?>>() {
+                          @Override
+                          public Publisher<?> apply(MessageChannel channel) {
+                              if  (message.isDone() && !message.isCompletedExceptionally()) {
+                                  String fullMessage = message.get().getContent();
+                                  final GuildConfig config = SimpleBot.instance.getGuildConfig(((GuildChannel)channel).getGuildId().asLong());
+                                  String prefix = config.getPrefix();
+                                  if (!fullMessage.startsWith(prefix)) {
+                                      return new Publisher<Object>() {
+                                          @Override
+                                          public void subscribe(Subscriber<? super Object> subscriber) {
+
+                                          }
+                                      }
+                                  }
+                              }
+                              String fullMessage = message.get().getContent();
+                              final GuildConfig config = SimpleBot.instance.getGuildConfig(((GuildChannel)channel).getGuildId().asLong());
+                              String prefix = config.getPrefix();
+                              if (!fullMessage.startsWith(prefix)) {
+                                  return;//no prefix dont handle it
+                              }
+                              final String message = fullMessage.substring(prefix.length());
+                              final String[] mSplit = message.split("\\s+");
+                              return null;
+                          }
+                      }).flatMap()
+
+                return null;
+            }
+        })
         Message m = event.getMessage();
-        Member u = event.getMember().get();
-        event.getMessage().getChannel().filter(messageChannel -> {
-            return messageChannel.getType() == Channel.Type.GUILD_TEXT;
-        }).subscribe(messageChannel -> {
-            String fullMessage = m.getContent().get();
+        Optional<Member> u = event.getMember();
+        return event.getMessage().getChannel()
+              .filter(messageChannel -> messageChannel.getType() == Channel.Type.GUILD_TEXT)
+              .flatMap(messageChannel -> {
+            String fullMessage = m.getContent();
             final GuildConfig config = SimpleBot.instance.getGuildConfig(((GuildChannel)messageChannel).getGuildId().asLong());
             String prefix = config.getPrefix();
             if (!fullMessage.startsWith(prefix)) {
@@ -81,21 +150,15 @@ public class CommandListener {
                                         }
                                         return;
                                     case "announcechannelid":
-                        
-                                        Channel oldChannel = SimpleBot.client.getChannelById(Snowflake.of(config.getAnnounceChannelID())).block();
-                        
+
+                                        ChannelData oldChannel = SimpleBot.client.getChannelById(Snowflake.of(config.getAnnounceChannelID())).getData().block();
+
                                         if (mSplit.length > 2) {
                                             Long newAnnounceID = Long.parseLong(mSplit[2]);
-                                            Channel newChannel = SimpleBot.client.getChannelById(Snowflake.of(newAnnounceID))
-                                                    .on
-                                                    .subscribe(channel -> {
-                                                    
-                                                    
-                                                    })
-                                            );
+                                            RestChannel newChannel = SimpleBot.client.getChannelById(Snowflake.of(newAnnounceID));
                                             if (newChannel == null) {
                                                 if (oldChannel != null) {
-                                                    Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldChannel.getName());
+                                                    Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldChannel);
                                                 }
                                                 Utility.sendPrivateMessage(u, newAnnounceID + " could not find a channel with that ID");
                                                 return;
@@ -107,15 +170,15 @@ public class CommandListener {
                                             } else {
                                                 Utility.sendPrivateMessage(u, "Channel updated Old: " + oldChannel.getName() + "New: " + newChannel.getName());
                                             }
-                            
+
                                         } else {
                                             Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldChannel.getName());
                                         }
                                         return;
                                     case "modchannelid":
-                        
+
                                         IChannel oldMChannel = SimpleBot.client.getChannelByID(config.getModChannelID());
-                        
+
                                         if (mSplit.length > 2) {
                                             Long newModChannelID = Long.parseLong(mSplit[2]);
                                             IChannel newChannel = SimpleBot.client.getChannelByID(newModChannelID);
@@ -133,7 +196,7 @@ public class CommandListener {
                                             } else {
                                                 Utility.sendPrivateMessage(u, "Channel updated Old: " + oldMChannel.getName() + "New: " + newChannel.getName());
                                             }
-                            
+
                                         } else {
                                             Utility.sendPrivateMessage(u, "Current Annoucement Channel is : " + oldMChannel.getName());
                                         }
@@ -165,7 +228,7 @@ public class CommandListener {
                                 sendAdminHelp(g, u, prefix);
                                 return;
                             }
-        
+
                         case "reloadguildconfig":
                             GuildConfig c = SimpleBot.instance.getGuildConfig(m.getGuild().getLongID());
                             c.loadConfig();
@@ -178,7 +241,7 @@ public class CommandListener {
                             break;
                         default:
                     }
-                
+
                 }
                 if(role.getPermissions().contains(Permission.KICK_MEMBERS)){
                     switch (mSplit[0].toLowerCase()) {
@@ -190,7 +253,7 @@ public class CommandListener {
                                     //todo  more than 1 user by that name
                                     Utility.sendPrivateMessage(u, "to many users with that name cant warn");
                                 }
-                
+
                             }
                             return;
                         case "purge":
@@ -219,7 +282,7 @@ public class CommandListener {
                         case "help":
                             sendModeraterHelp(g,u,prefix);
                         default:
-        
+
                     }
                 }
                 switch (mSplit[0].toLowerCase()) {
@@ -271,13 +334,11 @@ public class CommandListener {
                         sendUserHelp(g, u, prefix);
                         break;
                     default:
-        
-                }
-            }).subscribe();
-            
-        });
-        
 
+                }
+            });
+
+        });
     }
 
     private void sendAdminHelp(IGuild g, IUser u, String prefix){

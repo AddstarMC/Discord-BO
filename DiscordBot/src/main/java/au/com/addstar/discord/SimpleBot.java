@@ -7,12 +7,22 @@ import au.com.addstar.discord.listeners.CommandListener;
 import au.com.addstar.discord.listeners.ManagementListener;
 import au.com.addstar.discord.objects.GuildConfig;
 import com.sun.net.httpserver.HttpServer;
+import discord4j.common.LogUtil;
 import discord4j.core.DiscordClient;
 import discord4j.core.DiscordClientBuilder;
+import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.EventDispatcher;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
+import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.event.domain.message.MessageEvent;
+import discord4j.core.shard.GatewayBootstrap;
+import discord4j.rest.request.RouterOptions;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.Loggers;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -20,6 +30,9 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -27,16 +40,17 @@ import java.util.Properties;
  */
 public class SimpleBot {
 
+    private static ExecutorService executor = Executors.newCachedThreadPool();
     public static SimpleBot instance;
     public static DiscordClient client;
+    public static GatewayDiscordClient gatewayDiscordClient;
     public static Properties config;
     private static HashMap<Long,GuildConfig> gConfigs;
     static HttpServer server;
     public static final Logger log = LoggerFactory.getLogger(SimpleBot.class);
 
 
-    public SimpleBot(DiscordClient client)  {
-        SimpleBot.client = client;
+    public SimpleBot()  {
         gConfigs = new HashMap<>();
     }
 
@@ -57,45 +71,38 @@ public class SimpleBot {
         configureListeners();
         server = createHttpServer();
         addContexts(server);
-        server.setExecutor(null);
+        server.setExecutor(executor);
         server.start();
         log.info("HttpServer started on " + server.getAddress().getHostString() +":"+ server.getAddress().getPort());
         Runtime.getRuntime().addShutdownHook(new Thread(SimpleBot::close, "Shutdown-thread"));
     }
 
     private static SimpleBot create(String token) {
-        DiscordClientBuilder builder = new DiscordClientBuilder(token);
-        DiscordClient c = builder.build();
-        if (c != null) {
-            return new SimpleBot(c);
-        }else{
-            return null;
-        }
+        client = DiscordClientBuilder.create(token).build();
+        instance = new SimpleBot();
+        return instance;
     }
     
     private void daemonize(){
-        Thread thread = new Thread(this.createSimpleBotDaemon());
-        thread.setDaemon(true);
-        thread.start();
-        thread.stop();
+        executor.submit(this.createSimpleBotDaemon());
+
     }
 
-    private Runnable createSimpleBotDaemon(){
-        return new Runnable() {
-            private boolean enabled;
-            @Override
-            public void run() {
-                    Mono m = client.login();
-                    m.block();
-            }
+    private Runnable createSimpleBotDaemon() {
+        return () -> {
+                gatewayDiscordClient = client.login().block();
         };
-        
     }
+
     private static void configureListeners() {
-        ManagementListener mListen = new ManagementListener();
-        CommandListener cListen = new CommandListener();
-        client.getDispatcher().registerListener(mListen);
-        client.getDispatcher().registerListener(cListen);
+        new ManagementListener(gatewayDiscordClient);
+        client.withGateway(gatewayDiscordClient -> {
+                  Mono<Void> onMessage = gatewayDiscordClient.getEventDispatcher()
+                        .on(MessageCreateEvent.class)
+                        .doOnNext(CommandListener::commandListener)
+                        .then();
+                  return Mono.when(onMessage);
+              }).block();
         log.info("Listeners are configured.");
     }
 

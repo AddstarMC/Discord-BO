@@ -7,13 +7,26 @@ import au.com.addstar.discord.objects.Invitation;
 import au.com.addstar.discord.ulilities.Utility;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import discord4j.common.util.Snowflake;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.channel.GuildChannel;
+import discord4j.discordjson.json.ChannelData;
+import discord4j.discordjson.json.InviteData;
+import discord4j.discordjson.json.UserGuildData;
+import discord4j.rest.entity.RestChannel;
+import discord4j.rest.entity.RestGuild;
+import javafx.beans.property.SimpleBooleanProperty;
 import org.apache.http.HttpStatus;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IInvite;
+import reactor.core.publisher.Mono;
+
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static au.com.addstar.discord.managers.InvitationManager.checkforInvite;
 import static au.com.addstar.discord.managers.InvitationManager.createInvite;
@@ -30,50 +43,89 @@ public class InviteHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange t) throws IOException {
         SimpleBot.log.debug("InviteRequest received from " + t.getRemoteAddress());
-        int responseCode = HttpStatus.SC_BAD_REQUEST;
+        final AtomicInteger responseCode = new AtomicInteger(HttpStatus.SC_BAD_REQUEST);
         Map<String, String> responsebuilder = new HashMap<>();
-        String response ;
+        final AtomicReference<String> response = new AtomicReference<>();
         List<String> contentHeaderList = new ArrayList<>();
         String requestPath = t.getRequestURI().getPath();
         String[] path = requestPath.split("/");
 
         if (path.length < 6) {
             contentHeaderList.add("application/text");
-            Utilities.doResponse(t, responseCode, contentHeaderList, "Must have 5 parts");
+            Utilities.doResponse(t, responseCode.get(), contentHeaderList, "Must have 5 parts");
             return;
         }
-        String guildName = path[2];
+        Long guildName = Long.parseLong(path[2]);
         String channelName = path[3];
         UUID uuid = Utility.StringtoUUID(path[4]);
         String user = path[5];
-        IGuild guild = Utilities.getGuildbyName(guildName);
-        if (guild == null) {
-            responseCode = HttpStatus.SC_BAD_REQUEST;
+        Mono<Guild> guild;
+        try {
+            guild = Utilities.getGuildByID(guildName).single();
+        }catch (NoSuchElementException e) {
+            responseCode.set(HttpStatus.SC_BAD_REQUEST);
             contentHeaderList.add("application/text");
-            response = "No Guilds found matching " + guildName;
-            Utilities.doResponse(t, responseCode, contentHeaderList, response);
+            response.set("No Guilds found matching " + guildName);
+            Utilities.doResponse(t, responseCode.get(), contentHeaderList, response.get());
             return;
         }
-        GuildConfig config = SimpleBot.instance.getGuildConfig(guild.getLongID());
+        guild.subscribe(new Consumer<Guild>() {
+            @Override
+            public void accept(Guild guild) {
+                GuildConfig config = SimpleBot.instance.getGuildConfig(guild.getId().asLong());
+                final Invitation pendingInvitation = InvitationManager.checkForUUIDInvite(config, uuid);
+                if (pendingInvitation != null) {
+                    if (!pendingInvitation.getUserName().equals(user)) {
+                        SimpleBot.log.info("Pending Invite Code: " + pendingInvitation.getInviteCode() + " was updated with a new username: " + user + " Old user:" + pendingInvitation.getUserName());
+                        pendingInvitation.setUserName(user);
+                    }
+                    responseCode.set(HttpStatus.SC_OK);
+                    responsebuilder.put("url", "https://discord.gg/" + pendingInvitation.getInviteCode());
+                    responsebuilder.put("cmd", config.getPrefix() + "register " + pendingInvitation.getInviteCode());
+                    SimpleBot.log.info("Stored Invite will be returned for " + pendingInvitation.getUserName() + " : " + pendingInvitation.getInviteCode());
+                } else { //generate a new invite.
+                    guild.getChannelById(Snowflake.of(channelName)).subscribe(new Consumer<GuildChannel>() {
+                        @Override
+                        public void accept(GuildChannel guildChannel) {
+                            g
+                        }
+                    })
+                }
+            }
+        })
         int expiry = config.getExpiryTime();
-        Invitation pendingInvitation = InvitationManager.checkForUUIDInvite(config, uuid);
-        if (pendingInvitation != null && pendingInvitation.hasExpired()) {
-            SimpleBot.log.info("Pending Invite Code: " + pendingInvitation.getInviteCode() + "had expired and is being removed. Expiry: " + Utility.getDate(pendingInvitation.getExpiryTime()));
-            InvitationManager.removeInvitation(config, pendingInvitation.getInviteCode());
-            pendingInvitation = null;
-        } else if (pendingInvitation != null) {
+        final Invitation pendingInvitation = InvitationManager.checkForUUIDInvite(config, uuid);
+        if (pendingInvitation != null) {
             if (!pendingInvitation.getUserName().equals(user)) {
                 SimpleBot.log.info("Pending Invite Code: " + pendingInvitation.getInviteCode() + " was updated with a new username: " + user + " Old user:" + pendingInvitation.getUserName());
-
                 pendingInvitation.setUserName(user);
             }
-            responseCode = HttpStatus.SC_OK;
+            responseCode.set(HttpStatus.SC_OK);
             responsebuilder.put("url", "https://discord.gg/" + pendingInvitation.getInviteCode());
             responsebuilder.put("cmd", config.getPrefix() + "register " + pendingInvitation.getInviteCode());
             SimpleBot.log.info("Stored Invite will be returned for " + pendingInvitation.getUserName() + " : " + pendingInvitation.getInviteCode());
 
+        } else {
+
         }
-        List<IChannel> channels = SimpleBot.client.getGuildByID(guild.getLongID()).getChannelsByName(channelName);
+        SimpleBot.client.getGuildById(Snowflake.of(guild.id())).getChannels().filter(
+              new Predicate<ChannelData>() {
+                  @Override
+                  public boolean test(ChannelData channelData) {
+                      return channelData.name().get().equals(channelName);
+                  }
+              }).subscribe(new Consumer<ChannelData>() {
+            @Override
+            public void accept(ChannelData channelData) {
+                if (channelData == null) {
+                    responseCode.set(HttpStatus.SC_BAD_REQUEST);
+                    response.set("0 channels found matching " + channelName);
+                } else {
+                    RestChannel channel = SimpleBot.gatewayDiscordClient.getRestClient().getChannelById(Snowflake.of(channelData.id()))
+                    InviteData data = checkforInvite(channel,pendingInvitation);
+                }
+            }
+        })
         IChannel channel = Utilities.getChannelbyName(guild, channelName);
         if (channel == null) {
             responseCode = HttpStatus.SC_BAD_REQUEST;
